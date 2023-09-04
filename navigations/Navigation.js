@@ -2,42 +2,81 @@ import React from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
-import Home from '../views/home'
-import Achievements from '../views/Achievements'
-import Categories from '../views/Categories'
-import UsualPayments from '../views/UsualPayments'
-import Settings from '../views/Settings'
+import DarumiStack from './DarumiStack'
+import UsualPaymentsStack from './UsualPaymentsStack'
+import CategoriesStack from './CategoriesStack'
+import AchievementsStack from './AchievementsStack'
+import SettingsStack from './SettingsStack'
+import { Icon } from 'react-native-elements'
 
 
 const Tab = createBottomTabNavigator()
 
 export default function Navigation() {
+    const screenOptions = (route, color) => {
+        let iconName
+        switch (route.name) {
+            case "home":
+                iconName = "home-analytics"
+                break;
+            case "usual-payments":
+                iconName = "cash-check"
+                break;
+            case "achievements":
+                iconName = "trophy-outline"
+                break;
+            case "categories":
+                iconName = "shape-outline"
+                break;
+            case "settings":
+                iconName = "cog-outline"
+                break;
+        }
+
+        return (
+            <Icon
+                type='material-community'
+                name={iconName}
+                size={22}
+                color={color}
+            />
+        )
+    }
   return (
     <NavigationContainer>
-        <Tab.Navigator>
+        <Tab.Navigator
+            initialRouteName='home'
+            tabBarOptions= {{
+                inactiveTintColor: "#443e10",
+                activeTintColor:"#c7af04"
+            }}
+            screenOptions={({route }) => ({
+                tabBarIcon: ({ color}) => screenOptions(route, color)
+            })}
+        >
             <Tab.Screen 
                 name="home"
-                component={Home}
+                component={DarumiStack}
                 options={{ title: "Inicio" }}
             />
             <Tab.Screen 
                 name="usual-payments"
-                component={UsualPayments}
+                component={UsualPaymentsStack}
                 options={{ title: "Pagos habituales"}}
             />
             <Tab.Screen 
                 name="categories"
-                component={Categories}
+                component={CategoriesStack}
                 options={{ title: "Categorías"}}
             />
             <Tab.Screen 
                 name="achievements"
-                component={Achievements}
+                component={AchievementsStack}
                 options={{ title: "Logros"}}
             />
             <Tab.Screen 
                 name="settings"
-                component={Settings}
+                component={SettingsStack}
                 options={{ title: "Opciones"}}
             />
         </Tab.Navigator>
