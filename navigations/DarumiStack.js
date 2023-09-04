@@ -1,7 +1,7 @@
 import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
 
-import Home from '../views/Home'
+import Home from '../views/account/Home'
 
 const Stack = createStackNavigator()
 
