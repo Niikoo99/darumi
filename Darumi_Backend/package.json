@@ -1,0 +1,19 @@
+{
+    "name": "Darumi_Backend",
+    "version": "1.0.0",
+    "keywords": [
+        "util",
+        "functional",
+        "server",
+        "client",
+        "browser"
+    ],
+    "author": "imano-oh",
+    "contributors": [],
+    "dependencies": {
+        "express": "^4.18.2",
+        "graphql": "^16.8.1",
+        "mysql2": "^3.6.1",
+        "socket.io": "^4.7.2"
+    }
+}
