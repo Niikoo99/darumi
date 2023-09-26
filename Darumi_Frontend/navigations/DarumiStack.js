@@ -11,7 +11,7 @@ export default function DarumiStack() {
         <Stack.Screen
             name='home'
             component={Home}
-            options={{title: "Inicio"}}
+            options={{tabBarShowLabel: false}}
         />
     </Stack.Navigator>
   )

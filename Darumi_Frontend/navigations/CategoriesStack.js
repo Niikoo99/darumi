@@ -11,7 +11,7 @@ export default function CategoriesStack() {
         <Stack.Screen
             name='categories'
             component={Categories}
-            options={{title: "Categorías"}}
+            options={{tabBarShowLabel: false}}
         />
     </Stack.Navigator>
   )
