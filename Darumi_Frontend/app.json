@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "darumi",
-    "slug": "darumi",
+    "name": "Darumi_Frontend",
+    "slug": "Darumi_Frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

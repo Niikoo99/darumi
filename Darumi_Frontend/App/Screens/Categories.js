@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { View, Text } from 'react-native'
 import React from 'react'
 
 export default function Categories() {
@@ -8,5 +8,3 @@ export default function Categories() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({})
