@@ -2,6 +2,7 @@ import { View, Text, Button } from 'react-native'
 import React from 'react'
 import { useAuth } from '@clerk/clerk-expo';
 import Header from '../Components/Home/Header';
+import MonthInfo from '../Components/Home/MonthInfo';
 
 export default function Home() {
     const { isLoaded,signOut } = useAuth();
@@ -11,6 +12,7 @@ export default function Home() {
       <Header/>
         {/* <Button title='SignOut'
                 onPress={() =>signOut()}></Button> */}
+      <MonthInfo/>
     </View>
   )
 }
