@@ -10,12 +10,12 @@ const app = express();
 const port = 3000;
 const connection = require('../db');
 
-const asignaciones = express.Router();
+const metas = express.Router();
 
 app.use(express.json());
 
 // GET todos los registros de tabla usuarios_y_objetivos 
-asignaciones.get('/asignaciones', (req, res) => {
+metas.get('/metas', (req, res) => {
     connection.query('SELECT * FROM usuarios_y_objetivos', (error, results) => {
         if (error) {
             console.error('Error al ejecutar la consulta MySQL', error);
@@ -27,7 +27,7 @@ asignaciones.get('/asignaciones', (req, res) => {
 });
 
 // GET un usuarios_y_objetivos por ID
-asignaciones.get('/asignaciones/:id', (req, res) => {
+metas.get('/metas/:id', (req, res) => {
   const userId = req.params.id; // Obten el ID desde los parámetros de la URL
 
   connection.query('SELECT * FROM usuarios_y_objetivos WHERE Id_relacion_usuario_objetivo = ?', [userId], (error, results) => {
@@ -43,7 +43,7 @@ asignaciones.get('/asignaciones/:id', (req, res) => {
 });
 
 // POST nuevo usuarios_y_objetivos
-asignaciones.post('/asignaciones', (req, res) => {
+metas.post('/metas', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
 
@@ -63,7 +63,7 @@ asignaciones.post('/asignaciones', (req, res) => {
   });
 });
 
-module.exports = asignaciones;
+module.exports = metas;
 console.log(`Modulo ${fileName} cargado con exito`);
 
 
