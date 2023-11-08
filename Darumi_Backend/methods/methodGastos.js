@@ -46,14 +46,14 @@ gastos.get('/gastos/:id', (req, res) => {
 gastos.post('/gastos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_gasto"];
-  const monto = req.body["Monto_gasto"];
-  const titulo = req.body["Titulo_gasto"];
-  const detalle = req.body["Detalle_gasto"];
-  const fecha = req.body["Fecha_creacion_gasto"]; // Hay que hacer que sea la fecha en que se carga el gasto; new Date() lo hace
-  const categoria = req.body["Categoria_gasto"];
-  const usuario = req.body["Id_usuario"];
+  const id = req.query["Id_gasto"];
+  const monto = req.query["Monto_gasto"];
+  const titulo = req.query["Titulo_gasto"];
+  const detalle = req.query["Detalle_gasto"];
+  //const fecha = req.body["Fecha_creacion_gasto"]; // Hay que hacer que sea la fecha en que se carga el gasto; new Date() lo hace
+  const fecha = new Date();
+  const categoria = req.query["Categoria_gasto"];
+  const usuario = req.query["Id_usuario"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO gastos (Id_gasto, Monto_gasto, Titulo_gasto, Detalle_gasto, Fecha_creacion_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, monto, titulo, detalle, fecha, categoria, usuario], (error, results) => {

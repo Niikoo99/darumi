@@ -46,11 +46,10 @@ usuarios.get('/usuarios/:id', (req, res) => {
 usuarios.post('/usuarios', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_usuario"];
-  const apellido = req.body["Apellido_usuario"];
-  const nombre = req.body["Nombre_usuario"];
-  const email = req.body["Email_usuario"];
+  const id = req.query["Id_usuario"];
+  const apellido = req.query["Apellido_usuario"];
+  const nombre = req.query["Nombre_usuario"];
+  const email = req.query["Email_usuario"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO usuarios (Id_usuario, Apellido_usuario, Nombre_usuario, Email_usuario) VALUES (?, ?, ?, ?)', [id, apellido, nombre, email], (error, results) => {

@@ -46,9 +46,8 @@ estados.get('/estados/:id', (req, res) => {
 estados.post('/estados', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_estado"];
-  const nombre_estado = req.body["Nombre_estado"];
+  const id = req.query["Id_estado"];
+  const nombre_estado = req.query["Nombre_estado"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO estados (Id_estado, Nombre_estado) VALUES (?, ?)', [id, nombre_estado], (error, results) => {

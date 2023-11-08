@@ -46,9 +46,8 @@ categorias.get('/categorias/:id', (req, res) => {
 categorias.post('/categorias', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_categoria"];
-  const nombre_categoria = req.body["Nombre_categoria"];
+  const id = req.query["Id_categoria"];
+  const nombre_categoria = req.query["Nombre_categoria"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO categorias (Id_categoria, Nombre_categoria) VALUES (?, ?)', [id, nombre_categoria], (error, results) => {

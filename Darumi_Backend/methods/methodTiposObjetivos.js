@@ -46,9 +46,8 @@ tipos.get('/tipos/:id', (req, res) => {
 tipos.post('/tipos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_tipo_objetivo"];
-  const nombre_tipo = req.body["Nombre_tipo_objetivo"];
+  const id = req.query["Id_tipo_objetivo"];
+  const nombre_tipo = req.query["Nombre_tipo_objetivo"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO tipos (Id_tipo_objetivo, Nombre_tipo_objetivo) VALUES (?, ?)', [id, nombre_tipo], (error, results) => {

@@ -46,12 +46,11 @@ objetivos.get('/objetivos/:id', (req, res) => {
 objetivos.post('/objetivos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_objetivo"];
-  const titulo = req.body["Titulo_objetivo"];
-  const fecha = req.body["Fecha_creacion_objetivo"];
-  const tipo = req.body["Tipo_objetivo"];
-  const estado = req.body["Estado_objetivo"];
+  const id = req.query["Id_objetivo"];
+  const titulo = req.query["Titulo_objetivo"];
+  const fecha = req.query["Fecha_creacion_objetivo"];
+  const tipo = req.query["Tipo_objetivo"];
+  const estado = req.query["Estado_objetivo"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO objetivos (Id_objetivo, Titulo_objetivo, Fecha_creacion_objetivo, Tipo_objetivo, Estado_objetivo) VALUES (?, ?, ?, ?, ?)', [id, titulo, fecha, tipo, estado], (error, results) => {

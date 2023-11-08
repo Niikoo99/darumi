@@ -46,10 +46,9 @@ metas.get('/metas/:id', (req, res) => {
 metas.post('/metas', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-
-  const id = req.body["Id_relacion_usuario_objetivo"];
-  const usuario = req.body["Usuario"];
-  const objetivo = req.body["Objetivo"];
+  const id = req.query["Id_relacion_usuario_objetivo"];
+  const usuario = req.query["Usuario"];
+  const objetivo = req.query["Objetivo"];
 
   // Realiza la inserción en la base de datos
   connection.query('INSERT INTO usuarios_y_objetivos (Id_relacion_usuario_objetivo, Usuario, Objetivo) VALUES (?, ?, ?)', [id, usuario, objetivo], (error, results) => {
