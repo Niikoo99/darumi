@@ -16,7 +16,7 @@ const estados = require('./methods/methodEstados');
 const gastos = require('./methods/methodGastos');
 const objetivos = require('./methods/methodObjetivos');
 const tipos = require('./methods/methodTiposObjetivos');
-const asignaciones = require('./methods/methodUsuariosObjetivos');
+const metas = require('./methods/methodUsuariosObjetivos');
 
 app.use(express.json());
 
@@ -26,7 +26,7 @@ app.use('/', estados);
 app.use('/', gastos);
 app.use('/', objetivos);
 app.use('/', tipos);
-app.use('/', asignaciones);
+app.use('/', metas);
 
 app.get('/hola', (req, res) => {
   res.send('¡Hola, mundo!');
