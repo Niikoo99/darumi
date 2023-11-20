@@ -1,9 +1,10 @@
 import { View, Text, Button, Modal, TextInput, StyleSheet } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { useAuth } from '@clerk/clerk-expo';
 import Header from '../Components/Home/Header';
 import MonthInfo from '../Components/Home/MonthInfo';
 import { Picker } from '@react-native-picker/picker';
+import axios from 'axios';
 
 export default function Home() {
   
@@ -12,6 +13,18 @@ export default function Home() {
   const [categoria, setCategoria] = useState('');
   const [valor, setValor] = useState('');
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [data, setData] = useState('');
+
+  useEffect(() => {
+    axios.get('http://192.168.1.132:3000/api/data')
+      .then(response => {
+        setData(response.data.message);
+        console.log(response.data.message);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);  
 
   const handleGuardarGasto = () => {
     // Aquí puedes manejar la lógica para guardar el gasto
@@ -23,12 +36,12 @@ export default function Home() {
     // Cerrar el modal después de guardar el gasto
     setCategoriaSeleccionada('');
     setModalVisible(false);
-  };
+  };  
 
   return (
     <View style={{ padding: 20, marginTop: 25 }}>
       <Header />
-      <MonthInfo />
+      <MonthInfo/>
       <Button title="Agregar Gasto" onPress={() => setModalVisible(true)} />
       <Modal
         animationType="slide"
@@ -43,7 +56,7 @@ export default function Home() {
           <TextInput
             style={styles.input}
             placeholder="Titulo"
-            keyboardType="text"
+            keyboardType="default"
             value={valor}
             onChangeText={(text) => setValor(text)}
             placeholderTextColor="#333" // Color del texto de placeholder
@@ -51,7 +64,7 @@ export default function Home() {
           <TextInput
             style={styles.input}
             placeholder="Detalle"
-            keyboardType="text"
+            keyboardType="default"
             value={valor}
             onChangeText={(text) => setValor(text)}
             placeholderTextColor="#333" // Color del texto de placeholder
@@ -91,10 +104,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffffff', // Fondo blanco para el modal
+    padding: 20,
   },
   modalHeader: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginTop: 20,
     marginBottom: 20,
     color: '#007bff', // Color del encabezado
   },
@@ -120,5 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '80%',
+    paddingTop: 20,
+    marginTop: 20,
   },
 });

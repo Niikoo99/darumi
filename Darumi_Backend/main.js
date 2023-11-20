@@ -6,7 +6,18 @@
 // Usar method.js como middleware en main.js:
 
 const express = require('express');
+const cors = require('cors');
 const app = express();
+
+const corsOptions = {
+  origin: 'http://localhost:3000', // Add your frontend url here
+  allowedHeaders: 'Origin, X-Api-Key, X-Requested-With, Content-Type, Accept, Authorization',
+  methods: 'POST, PUT, PATCH, GET, DELETE, OPTIONS', // Add the allowed methods here
+    
+  };
+
+app.use(cors(corsOptions));
+
 const port = 3000;
 const connection = require('./db');
 
@@ -28,12 +39,35 @@ app.use('/', objetivos);
 app.use('/', tipos);
 app.use('/', metas);
 
+app.get('/api/user/:logintoken', (req, res) => {
+  const email = req.params.logintoken;
+  
+  // Perform logic to retrieve value based on user's logintoken
+  // For example, you can query a database or perform any other operation
+  
+  // Dummy response for demonstration purposes
+  const value = 'Some value based on user email: ' + email;
+  
+  res.json({ value });
+});
+
+// Redirect to /hola
+app.get('/', (req, res) => {
+  res.redirect('/hola');
+});
+
 app.get('/hola', (req, res) => {
   res.send('¡Hola, mundo!');
 });
 
 app.get('/chau', (req, res) => {
   res.send('¡Adios, mundo cruel!');
+});
+
+app.get('/api/data', (req, res, next) => {
+  // Handle your API logic here
+  const data = { message: 'Hello from the server!' };
+  res.json(data);
 });
 
 app.listen(port, () => {
