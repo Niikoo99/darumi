@@ -42,6 +42,22 @@ gastos.get('/gastos/:id', (req, res) => {
   });
 });
 
+// GET todos los gastos de un usuario por ID
+gastos.get('/gastos/:idUser', (req, res) => {
+  const userId = req.params.idUser; // Obten el ID desde los parámetros de la URL
+
+  connection.query('SELECT G.* FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario WHERE G.Identifier_usuario = ?', [idUser], (error, results) => {
+    if (error) {
+      console.error('Error al ejecutar la consulta MySQL', error);
+      res.status(500).json({ error: 'Error de servidor' });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: 'Gasto no encontrado' });
+    } else {
+      res.json(results[0]); 
+    }
+  });
+});
+
 // POST nuevo gasto
 gastos.post('/gastos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud

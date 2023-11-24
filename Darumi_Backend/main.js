@@ -39,14 +39,14 @@ app.use('/', objetivos);
 app.use('/', tipos);
 app.use('/', metas);
 
-app.get('/api/user/:logintoken', (req, res) => {
-  const email = req.params.logintoken;
+app.get('/api/gastos/:userId', (req, res) => {
+  const email = req.params.userId;
   
   // Perform logic to retrieve value based on user's logintoken
   // For example, you can query a database or perform any other operation
   
   // Dummy response for demonstration purposes
-  const value = 'Some value based on user email: ' + email;
+  const value = 'Some value based on user email' + email;
   
   res.json({ value });
 });

@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   `Id_usuario` int(11) NOT NULL AUTO_INCREMENT,
   `Apellido_usuario` varchar(50) NOT NULL,
   `Nombre_usuario` varchar(50) NOT NULL,
-  `Email_usuario` varchar(50) NOT NULL,
+  `Identifier_usuario` varchar(50) NOT NULL,
   PRIMARY KEY (`Id_usuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -226,9 +226,9 @@ TRUNCATE TABLE `usuarios`;
 -- Dumping data for table `usuarios`
 --
 
-INSERT INTO `usuarios` (`Id_usuario`, `Apellido_usuario`, `Nombre_usuario`, `Email_usuario`) VALUES
-(1, 'Diaz', 'Ramon', 'ramondiaz@mail.com'),
-(2, 'Labruna', 'Angel', 'labruna@angel.com');
+INSERT INTO `usuarios` (`Id_usuario`, `Apellido_usuario`, `Nombre_usuario`, `Identifier_usuario`) VALUES
+(1, 'Diaz', 'Ramon', '1231gz'),
+(2, 'Labruna', 'Angel', '12312gz');
 
 -- --------------------------------------------------------
 

@@ -44,15 +44,15 @@ usuarios.get('/usuarios/:id', (req, res) => {
 
 // POST nuevo usuario
 usuarios.post('/usuarios', (req, res) => {
+  console.log('POST /usuarios with body', req.body);
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
   //const { id, apellido, nombre, email } = req.body;
-  const id = req.query["Id_usuario"];
   const apellido = req.query["Apellido_usuario"];
   const nombre = req.query["Nombre_usuario"];
-  const email = req.query["Email_usuario"];
+  const identifier = req.query["Identifier_usuario"];
 
   // Realiza la inserción en la base de datos
-  connection.query('INSERT INTO usuarios (Id_usuario, Apellido_usuario, Nombre_usuario, Email_usuario) VALUES (?, ?, ?, ?)', [id, apellido, nombre, email], (error, results) => {
+  connection.query('INSERT INTO usuarios (Apellido_usuario, Nombre_usuario, Identifier_usuario) VALUES (?, ?, ?)', [apellido, nombre, identifier], (error, results) => {
     if (error) {
       console.error('Error al ejecutar la consulta MySQL', error);
       res.status(500).json({ error: 'Error de servidor' });

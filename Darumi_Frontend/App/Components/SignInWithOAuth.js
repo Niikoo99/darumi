@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect  } from "react";
 import * as WebBrowser from "expo-web-browser";
 import { Button, Dimensions, Text, TouchableOpacity } from "react-native";
-import { useOAuth } from "@clerk/clerk-expo";
+import { useOAuth, useUser  } from "@clerk/clerk-expo";
 import { useWarmUpBrowser } from "../../hooks/warmUpBrowser";
 import Colors from "../../assets/shared/Colors";
+import axios from 'axios';
  
 WebBrowser.maybeCompleteAuthSession();
  
@@ -13,6 +14,7 @@ const SignInWithOAuth = () => {
   useWarmUpBrowser();
  
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const {isLoaded, isSignedIn, user} = useUser();     
  
   const onPress = React.useCallback(async () => {
     try {
@@ -21,6 +23,8 @@ const SignInWithOAuth = () => {
  
       if (createdSessionId) {
         setActive({ session: createdSessionId });
+        
+           
       } else {
         // Use signIn or signUp for next steps such as MFA
       }
@@ -28,6 +32,23 @@ const SignInWithOAuth = () => {
       console.error("OAuth error", err);
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      axios
+        .get(`http://192.168.1.132:3000/usuarios`, {
+          Apellido_usuario: user.lastName,
+          Nombre_usuario: user.firstName,
+          Identifier_usuario: user.id,
+        })
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  }, [user]); // Add user as a dependency to the useEffect hook
  
   return (
     <TouchableOpacity 
