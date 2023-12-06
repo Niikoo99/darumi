@@ -14,17 +14,17 @@ const gastos = express.Router();
 
 app.use(express.json());
 
-// GET todos los registros de tabla gastos
-gastos.get('/gastos', (req, res) => {
-    connection.query('SELECT * FROM gastos', (error, results) => {
-        if (error) {
-            console.error('Error al ejecutar la consulta MySQL', error);
-            res.status(500).json({error: 'Error de servidor'});
-        } else {
-            res.json(results);
-        }
-    });
-});
+// // GET todos los registros de tabla gastos
+// gastos.get('/gastos', (req, res) => {
+//     connection.query('SELECT * FROM gastos', (error, results) => {
+//         if (error) {
+//             console.error('Error al ejecutar la consulta MySQL', error);
+//             res.status(500).json({error: 'Error de servidor'});
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
 
 // GET un gasto por ID
 gastos.get('/gastos/:id', (req, res) => {
@@ -43,17 +43,22 @@ gastos.get('/gastos/:id', (req, res) => {
 });
 
 // GET todos los gastos de un usuario por ID
-gastos.get('/gastos/:idUser', (req, res) => {
-  const userId = req.params.idUser; // Obten el ID desde los parámetros de la URL
+gastos.get('/gastos', (req, res) => {
+  const userId = req.query.Id_Usuario; // Get the ID from the query parameters
 
-  connection.query('SELECT G.* FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario WHERE G.Identifier_usuario = ?', [idUser], (error, results) => {
+  console.log(`API call: GET /gastos, User ID: ${userId}`);
+
+  const query = `SELECT G.* FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario WHERE U.Identifier_usuario = '${userId}'`;
+  console.log(`Executing query: ${query}`);
+
+  connection.query(query, [userId], (error, results) => {
     if (error) {
       console.error('Error al ejecutar la consulta MySQL', error);
       res.status(500).json({ error: 'Error de servidor' });
     } else if (results.length === 0) {
       res.status(404).json({ error: 'Gasto no encontrado' });
     } else {
-      res.json(results[0]); 
+      res.json(results); 
     }
   });
 });
@@ -61,29 +66,34 @@ gastos.get('/gastos/:idUser', (req, res) => {
 // POST nuevo gasto
 gastos.post('/gastos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
-  //const { id, apellido, nombre, email } = req.body;
-  const id = req.query["Id_gasto"];
-  const monto = req.query["Monto_gasto"];
-  const titulo = req.query["Titulo_gasto"];
-  const detalle = req.query["Detalle_gasto"];
-  //const fecha = req.query["Fecha_creacion_gasto"]; // Hay que hacer que sea la fecha en que se carga el gasto; new Date() lo hace
-  const fecha = new Date();
-  const categoria = req.query["Categoria_gasto"];
-  const usuario = req.query["Id_usuario"];
+  const { Categoria_gasto, Detalle_gasto, Id_usuario, Monto_gasto, Titulo_gasto } = req.body;
+  
+  // Log the call and its parameters
+  console.log(`New gasto request:
+  Monto: ${Monto_gasto}
+  Titulo: ${Titulo_gasto}
+  Detalle: ${Detalle_gasto}
+  Categoria: ${Categoria_gasto}
+  Usuario: ${Id_usuario}`);
 
   // Realiza la inserción en la base de datos
-  connection.query('INSERT INTO gastos (Id_gasto, Monto_gasto, Titulo_gasto, Detalle_gasto, Fecha_creacion_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, monto, titulo, detalle, fecha, categoria, usuario], (error, results) => {
-    if (error) {
-      console.error('Error al ejecutar la consulta MySQL', error);
-      res.status(500).json({ error: 'Error de servidor' });
-    } else {
-      // Devuelve el ID del usuario recién creado
-      //res.json({ id: results.insertId, apellido, nombre, email });
-      res.json({ id, monto, titulo, detalle, fecha, categoria, usuario });
-    }
+  connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
+    if (error) throw error;
+    connection.query('SET @idCategoria = (SELECT Id_categoria FROM categorias WHERE Nombre_categoria = ?)', [Categoria_gasto], (error, results, fields) => {
+      if (error) throw error;
+      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, @idCategoria, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto], (error, results, fields) => {
+        if (error) {
+          console.error('Error al ejecutar la consulta MySQL', error);
+          res.status(500).json({ error: 'Error de servidor' });
+        } else {
+          // Devuelve el ID del gasto recién creado
+          //res.json({ id: results.insertId, apellido, nombre, email });
+          // res.json({ id, monto, titulo, detalle, fecha, categoria, usuario });
+        }
+      });
+    });
   });
 });
-
 module.exports = gastos;
 console.log(`Modulo ${fileName} cargado con exito`);
 

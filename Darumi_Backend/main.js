@@ -14,7 +14,7 @@ const corsOptions = {
   allowedHeaders: 'Origin, X-Api-Key, X-Requested-With, Content-Type, Accept, Authorization',
   methods: 'POST, PUT, PATCH, GET, DELETE, OPTIONS', // Add the allowed methods here
     
-  };
+};
 
 app.use(cors(corsOptions));
 
@@ -39,35 +39,20 @@ app.use('/', objetivos);
 app.use('/', tipos);
 app.use('/', metas);
 
-app.get('/api/gastos/:userId', (req, res) => {
-  const email = req.params.userId;
-  
-  // Perform logic to retrieve value based on user's logintoken
-  // For example, you can query a database or perform any other operation
-  
-  // Dummy response for demonstration purposes
-  const value = 'Some value based on user email' + email;
-  
-  res.json({ value });
-});
-
 // Redirect to /hola
 app.get('/', (req, res) => {
+  console.log('GET /');
   res.redirect('/hola');
 });
 
 app.get('/hola', (req, res) => {
+  console.log('GET /hola');
   res.send('¡Hola, mundo!');
 });
 
 app.get('/chau', (req, res) => {
+  console.log('GET /chau');
   res.send('¡Adios, mundo cruel!');
-});
-
-app.get('/api/data', (req, res, next) => {
-  // Handle your API logic here
-  const data = { message: 'Hello from the server!' };
-  res.json(data);
 });
 
 app.listen(port, () => {

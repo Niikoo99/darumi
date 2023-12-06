@@ -42,14 +42,12 @@ const screenOptions = (route, color) => {
 export default function TabNavigation() {
   return (
     <Tab.Navigator
-            initialRouteName='Home'
-            tabBarOptions= {{
-                inactiveTintColor: "#443e10",
-                activeTintColor:"#c7af04"
-            }}
+            initialRouteName='Home'            
             screenOptions={({route }) => ({
                 tabBarIcon: ({ color}) => screenOptions(route, color), 
-                headerShown:false
+                headerShown:false,
+                inactiveTintColor: "#443e10",
+                activeTintColor:"#c7af04"
             })}
         >
         <Tab.Screen name='Home' 

@@ -23,27 +23,32 @@ export default function MonthInfo() {
 
   // Muestra los gastos del mes actual para todos los usuarios, cambiar por el usuario logueado con logintoken
   useEffect(() => {
-    axios
-      .get(`http://192.168.1.132:3000/api/user/:${user.id}`) // Cambiar por la IP de la PC donde se ejecuta el backend
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);  
+    if (user) {
+      axios
+        .get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } })
+        .then((response) => {
+          setData(response.data);
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  }, [user]); // Depend on 'user' so the effect runs whenever 'user' changes
 
   return (
     <View style={{ alignItems: 'center' }}>
       <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
         {currentMonth} {currentYear}
       </Text>
+      
       <FlatList
+        style={{ marginBottom: 25, marginTop: 15 }}
         data={data}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <Text style={{ fontSize: 14, fontWeight: 'semibold', marginBottom: 5, marginTop: 15 }}>
-            Gasto: {item.Titulo_gasto} - Monto: ${item.Monto_gasto}
+          <Text style={{ fontSize: 14, fontWeight: 'semibold', marginBottom: 5, marginTop: 5 }}>
+            Categoría: {item.Categoria_gasto} - Título: {item.Titulo_gasto} - Monto: ${item.Monto_gasto}
           </Text>
         )}
       />

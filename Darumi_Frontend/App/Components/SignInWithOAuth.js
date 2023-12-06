@@ -36,10 +36,12 @@ const SignInWithOAuth = () => {
   useEffect(() => {
     if (user) {
       axios
-        .get(`http://192.168.1.132:3000/usuarios`, {
-          Apellido_usuario: user.lastName,
-          Nombre_usuario: user.firstName,
-          Identifier_usuario: user.id,
+        .get(`http://192.168.1.131:3000/usuarios/${user.id}`, {
+          params: {
+            apellido: user.lastName,
+            nombre: user.firstName,
+            identifier: user.id,
+          },
         })
         .then((response) => {
           console.log(response.data);

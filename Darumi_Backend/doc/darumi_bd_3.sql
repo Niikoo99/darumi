@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `gastos` (
   `Monto_gasto` float NOT NULL,
   `Titulo_gasto` varchar(20) NOT NULL,
   `Detalle_gasto` varchar(100) NOT NULL,
-  `Fecha_creacion_gasto` datetime NOT NULL,
+  `Fecha_creacion_gasto` datetime NOT NULL DEFAULT current_timestamp(),
   `Categoria_gasto` int(11) NOT NULL,
   `Id_usuario` int(11) NOT NULL,
   PRIMARY KEY (`Id_gasto`),
@@ -207,8 +207,6 @@ INSERT INTO `tipos_objetivos` (`Id_tipo_objetivo`, `Nombre_tipo_objetivo`) VALUE
 DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE IF NOT EXISTS `usuarios` (
   `Id_usuario` int(11) NOT NULL AUTO_INCREMENT,
-  `Apellido_usuario` varchar(50) NOT NULL,
-  `Nombre_usuario` varchar(50) NOT NULL,
   `Identifier_usuario` varchar(50) NOT NULL,
   PRIMARY KEY (`Id_usuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -226,9 +224,9 @@ TRUNCATE TABLE `usuarios`;
 -- Dumping data for table `usuarios`
 --
 
-INSERT INTO `usuarios` (`Id_usuario`, `Apellido_usuario`, `Nombre_usuario`, `Identifier_usuario`) VALUES
-(1, 'Diaz', 'Ramon', '1231gz'),
-(2, 'Labruna', 'Angel', '12312gz');
+INSERT INTO `usuarios` (`Id_usuario`, `Identifier_usuario`) VALUES
+(1, '1231gz'),
+(2, '12312gz');
 
 -- --------------------------------------------------------
 

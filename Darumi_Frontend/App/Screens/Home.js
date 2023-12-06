@@ -1,6 +1,6 @@
 import { View, Text, Button, Modal, TextInput, StyleSheet } from 'react-native';
 import React, { useState, useEffect  } from 'react';
-import { useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
 import MonthInfo from '../Components/Home/MonthInfo';
 import { Picker } from '@react-native-picker/picker';
@@ -11,32 +11,42 @@ export default function Home() {
   const { isLoaded, signOut } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [categoria, setCategoria] = useState('');
-  const [valor, setValor] = useState('');
+  const [valor_Detalle, setValorDetalle] = useState('');
+  const [valor_Monto, setValorMonto] = useState('');
+  const [valor_Titulo, setValorTitulo] = useState('');
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [data, setData] = useState('');
+  const {isSignedIn, user} = useUser();
+  
+  const handleGuardarGasto = () => {
+    console.log('Request Params:', {
+      Monto_gasto: valor_Monto,
+      Categoria_gasto: categoriaSeleccionada,
+      Titulo_gasto: valor_Titulo,
+      Detalle_gasto: valor_Detalle,
+      Id_usuario: user.id,
+    });
 
-  useEffect(() => {
-    axios.get('http://192.168.1.132:3000/api/data')
-      .then(response => {
-        setData(response.data.message);
-        console.log(response.data.message);
+    axios
+      .post('http://192.168.1.131:3000/gastos', {
+        Monto_gasto: valor_Monto,
+        Categoria_gasto: categoriaSeleccionada,
+        Titulo_gasto: valor_Titulo,
+        Detalle_gasto: valor_Detalle,
+        Id_usuario: user.id,
       })
-      .catch(error => {
+      .then((response) => {
+        console.log('Gasto guardado:', response.data);
+        setCategoriaSeleccionada('');
+        setValor('');
+        setModalVisible(false);
+      })
+      .catch((error) => {
         console.error(error);
       });
-  }, []);  
 
-  const handleGuardarGasto = () => {
-    // Aquí puedes manejar la lógica para guardar el gasto
-    // Por ejemplo, enviar los datos a una API o almacenarlos localmente
-    console.log('Categoría:', categoriaSeleccionada);
-    console.log('Valor:', valor);
-    // Lógica adicional para guardar el gasto
-    // ...
-    // Cerrar el modal después de guardar el gasto
-    setCategoriaSeleccionada('');
-    setModalVisible(false);
-  };  
+    console.log('Handle guardar gasto called');
+  };
 
   return (
     <View style={{ padding: 20, marginTop: 25 }}>
@@ -57,16 +67,16 @@ export default function Home() {
             style={styles.input}
             placeholder="Titulo"
             keyboardType="default"
-            value={valor}
-            onChangeText={(text) => setValor(text)}
+            value={valor_Titulo}
+            onChangeText={(text) => setValorTitulo(text)}
             placeholderTextColor="#333" // Color del texto de placeholder
           />
           <TextInput
             style={styles.input}
             placeholder="Detalle"
             keyboardType="default"
-            value={valor}
-            onChangeText={(text) => setValor(text)}
+            value={valor_Detalle}
+            onChangeText={(text) => setValorDetalle(text)}
             placeholderTextColor="#333" // Color del texto de placeholder
           />
           <Picker
@@ -84,8 +94,8 @@ export default function Home() {
             style={styles.input}
             placeholder="Valor"
             keyboardType="numeric"
-            value={valor}
-            onChangeText={(text) => setValor(text)}
+            value={valor_Monto}
+            onChangeText={(text) => setValorMonto(text)}
             placeholderTextColor="#333" // Color del texto de placeholder
           />
           <View style={styles.buttonsContainer}>

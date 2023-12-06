@@ -3,6 +3,7 @@ import React from 'react'
 import app from './../../assets/images/darumi.png'
 import Colors from '../../assets/shared/Colors'
 import SignInWithOAuth from '../Components/SignInWithOAuth'
+import MonthInfo from '../Components/Home/MonthInfo';
 
 export default function Login() {
   return (
