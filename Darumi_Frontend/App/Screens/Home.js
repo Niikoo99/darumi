@@ -1,4 +1,4 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Button, Modal, TextInput, StyleSheet} from 'react-native';
 import React, { useState, useEffect  } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
@@ -17,7 +17,6 @@ export default function Home() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [data, setData] = useState('');
   const {isSignedIn, user} = useUser();
-  
   const handleGuardarGasto = () => {
     console.log('Request Params:', {
       Monto_gasto: valor_Monto,
@@ -37,8 +36,10 @@ export default function Home() {
       })
       .then((response) => {
         console.log('Gasto guardado:', response.data);
+        setValorMonto('');
+        setValorDetalle('');
+        setValorTitulo('');
         setCategoriaSeleccionada('');
-        setValor('');
         setModalVisible(false);
       })
       .catch((error) => {
@@ -49,9 +50,10 @@ export default function Home() {
   };
 
   return (
+    
     <View style={{ padding: 20, marginTop: 25 }}>
-      <Header />
-      <MonthInfo/>
+    <Header />
+      <MonthInfo />
       <Button title="Agregar Gasto" onPress={() => setModalVisible(true)} />
       <Modal
         animationType="slide"
@@ -104,6 +106,7 @@ export default function Home() {
           </View>
         </View>
       </Modal>
+      
     </View>
   );
 }

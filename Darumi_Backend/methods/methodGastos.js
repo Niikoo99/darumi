@@ -87,7 +87,7 @@ gastos.post('/gastos', (req, res) => {
           res.status(500).json({ error: 'Error de servidor' });
         } else {
           // Devuelve el ID del gasto recién creado
-          //res.json({ id: results.insertId, apellido, nombre, email });
+          res.json({ id: results.insertId });
           // res.json({ id, monto, titulo, detalle, fecha, categoria, usuario });
         }
       });
