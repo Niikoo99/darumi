@@ -48,7 +48,7 @@ gastos.get('/gastos', (req, res) => {
 
   console.log(`API call: GET /gastos, User ID: ${userId}`);
 
-  const query = `SELECT G.* FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario WHERE U.Identifier_usuario = '${userId}'`;
+  const query = `SELECT G.Monto_gasto, G.Titulo_gasto, G.Detalle_gasto, G.Fecha_creacion_gasto, C.Nombre_categoria FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario INNER JOIN categorias C ON C.Id_categoria = G.Categoria_gasto WHERE U.Identifier_usuario = '${userId}'`;
   console.log(`Executing query: ${query}`);
 
   connection.query(query, [userId], (error, results) => {

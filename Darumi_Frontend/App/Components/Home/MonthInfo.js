@@ -48,7 +48,7 @@ export default function MonthInfo() {
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <Text style={{ fontSize: 14, fontWeight: 'semibold', marginBottom: 5, marginTop: 5 }}>
-            Categoría: {item.Categoria_gasto} - Título: {item.Titulo_gasto} - Monto: ${item.Monto_gasto}
+            Categoría: {item.Nombre_categoria} - Título: {item.Titulo_gasto} - Monto: ${item.Monto_gasto}
           </Text>
         )}
       />
