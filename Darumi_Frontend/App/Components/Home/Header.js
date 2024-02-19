@@ -4,48 +4,30 @@ import { useUser } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'; 
 
 export default function Header() {
-    const {isLoaded, isSignedIn, user} = useUser();
-    if(!isLoaded||!isSignedIn)
-    {
-        return null
+    const { isLoaded, isSignedIn, user } = useUser();
+    if (!isLoaded || !isSignedIn) {
+        return null;
     }
-  return (
-    <View style= {{
-        display:'flex', 
-        flexDirection:'column',
-        gap:7,
-        alignItems:'center'
+    return (
+        <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingBottom: 10,
+            backgroundColor:'#E0E0E0'
         }}>
-        
-        <View style= {{
-            display:'flex', 
-            flexDirection:'row',
-            gap:7,
-            justifyContent: 'space-between'
-            }}>
-            <Ionicons name="trophy-outline" 
-                    size={30} 
-                    color="black"
-                    style={{padding:60}} /> 
-            <Image source={{uri:user.imageUrl}}
-                        style={{width:100, height:100, borderRadius:99}}/>
-            <Ionicons   name="notifications-outline" 
-                    size={30} 
-                    color="black"
-                    style={{padding:60}} />
-        </View>
-
-        <View style= {{
-            display:'flex', 
-            flexDirection:'row'
-            }}>
-            <View>
-                <Text style={{fontSize:22, alignSelf:'center'}}>Bienvenido 👋</Text>
-                <Text style={{
-                    fontSize:24,
-                    fontWeight:'bold'}}>{user.fullName}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 25, marginLeft: 20, marginTop: 10 }}>
+                <Ionicons name="trophy-outline" size={24} color="black" />
+                <Image
+                    source={{ uri: user.imageUrl }}
+                    style={{ width: 60, height: 60, borderRadius: 40, marginLeft: 10 }}
+                />
+            </View>
+            <View style={{ alignItems: 'center', marginLeft: 30, marginRight: 20}}>
+                <Text style={{ fontSize: 18, textAlign: 'right' }}>Bienvenido</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>{user.fullName}</Text>
             </View>
         </View>
-    </View>
-  )
+    )
 }

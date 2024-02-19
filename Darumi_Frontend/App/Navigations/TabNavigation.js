@@ -56,9 +56,6 @@ export default function TabNavigation() {
         <Tab.Screen name='UsualPayment' 
                     component={UsualPayment}
                     options={{ title: "Pagos habituales"}}/>
-        <Tab.Screen name='Categories' 
-                    component={Categories}
-                    options={{ title: "Categorías"}}/>
         <Tab.Screen name='Achievement' 
                     component={Achievement}
                     options={{ title: "Logros"}}/>

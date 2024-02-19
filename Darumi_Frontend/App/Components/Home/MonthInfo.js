@@ -1,12 +1,13 @@
-import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
-import { View, Image, Text, FlatList, StyleSheet } from 'react-native'
-import Colors from '../../../assets/shared/Colors'
-import app from './../../../assets/images/darumi.png'
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
+import Colors from '../../../assets/shared/Colors';
+import app from './../../../assets/images/darumi.png';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export default function MonthInfo() {
-
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
@@ -15,74 +16,391 @@ export default function MonthInfo() {
     currentDate.toLocaleString('default', { month: 'long' })
   ); // Obtiene el nombre del mes actual
   const currentYear = currentDate.getFullYear(); // Obtiene el año actual
+
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [showExpenses, setShowExpenses] = useState(true); // State variable to control visibility  
 
-  const {isLoaded, isSignedIn, user} = useUser();
-    if(!isLoaded||!isSignedIn)
-    {
-        return null
-    }
-
-  
-  
-  // Muestra los gastos del mes actual para todos los usuarios, cambiar por el usuario logueado con logintoken
   useEffect(() => {
-    if (user) {
-      console.log('Consultando gastos del mes actual')
-      axios
-        .get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } })
-        .then((response) => {
+    const fetchData = async () => {
+      if (isSignedIn) {
+        setLoading(true);
+        try {
+          const response = await axios.get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } });
           setData(response.data);
-          console.log(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    }
-  }, [user]); // Depend on 'user' so the effect runs whenever 'user' changes
+          setFilteredData(response.data); // Initialize filtered data with all data
+        } catch (error) {
+          setError(error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-  const styles = StyleSheet.create({
-    appImage:{
-        width:40,
-        height:40,
-        objectFit:'contain',
-        marginTop:5
-    },
-    heading:{
-        fontSize:20,
-        fontWeight:'bold',
-        color:Colors.canary
+    fetchData();
+  }, [isSignedIn, user]);
+  
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    const filtered = data.filter(item =>
+      item.Titulo_gasto.toLowerCase().includes(query.toLowerCase()) || // Adjust as needed
+      item.Detalle_gasto.toLowerCase().includes(query.toLowerCase()) ||
+      item.Nombre_categoria.toLowerCase().includes(query.toLowerCase())
+    );
+    applyMonthFilter(filtered); // Apply month filter after search filter
+  };
 
+  const applyMonthFilter = (items) => {
+    if (selectedMonth) {
+      const filtered = items.filter(item => {
+        const itemMonth = new Date(item.Fecha_creacion_gasto).getMonth() + 1; // Month is zero-indexed, so add 1
+        console.log('itemMonth Value:', itemMonth);
+        console.log('selectedMonth Value:', selectedMonth);
+        return itemMonth.toString() === selectedMonth.toString(); // Compare as strings to ensure strict equality
+      });
+      setFilteredData(filtered);
+    } else {
+      setFilteredData(items);
     }
-})
+  };
+
+  const handleRefresh = () => {
+    setSearchQuery('');
+    setSelectedMonth('');
+    setFilteredData(data);
+  };
+
+  // Array of months for the picker
+  const months = [
+    { value: '', label: 'Todos' },
+    { value: '1', label: 'Enero' },
+    { value: '2', label: 'Febrero' },
+    { value: '3', label: 'Marzo' },
+    { value: '4', label: 'Abril' },
+    { value: '5', label: 'Mayo' },
+    { value: '6', label: 'Junio' },
+    { value: '7', label: 'Julio' },
+    { value: '8', label: 'Agosto' },
+    { value: '9', label: 'Septiembre' },
+    { value: '10', label: 'Octubre' },
+    { value: '11', label: 'Noviembre' },
+    { value: '12', label: 'Diciembre' },
+  ];
+
+  if (!isLoaded || !isSignedIn) {
+    return null;
+  }
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.canary} />;
+  }
+
+  if (error) {
+    return <Text>Error: {error.message}</Text>;
+  }
+
+  const selectedTotal = selectedItems.reduce((total, itemId) => {
+    const selectedItem = data.find(item => item.id === itemId); // Assuming data is your list of items
+    return total + selectedItem.Monto_gasto; // Adjust this based on your data structure
+  }, 0);
+
+  const handleToggleVisibility = () => {
+    setShowExpenses(!showExpenses); // Toggle the visibility state
+  };
+
+  const renderItem = ({ item }) => {
+    if (!item) {
+      return null; // Return null if item is undefined
+    }
+
+    const isSelected = selectedItems.includes(item.id); // Assuming each item has a unique identifier like 'id'
+  
+    const itemStyle = {
+      backgroundColor: isSelected ? '#e0e0e0' : 'transparent', // Change background color based on selection
+    };
+
+    const toggleSelection = (itemId) => {
+      setSelectedItems(prevSelectedItems => {
+        if (prevSelectedItems.includes(itemId)) {
+          return prevSelectedItems.filter(id => id !== itemId);
+        } else {
+          return [...prevSelectedItems, itemId];
+        }
+      });
+    };
+
+    const amountStyle = item.Monto_gasto < 0 ? styles.negativeAmount : styles.positiveAmount;
+  
+    let iconComponent;
+    switch (item.Nombre_categoria.toLowerCase()) {
+      case 'comida/restaurante':
+        iconComponent = <Icon name="hamburger" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'transporte':
+        iconComponent = <Icon name="car" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'entretenimiento':
+        iconComponent = <Icon name="gamepad" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'combustibles':
+        iconComponent = <Icon name="gas-pump" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'varios':
+        iconComponent = <Icon name="archive" size={24} color="black" style={styles.icon} />;
+        break;
+      default:
+        iconComponent = <Icon name="shopping-cart" size={24} color="black" style={styles.icon} />; // Default icon
+        break;
+    }
+  
+    return (
+      <TouchableOpacity onPress={() => toggleSelection(item.id)}>
+      <View style={[styles.itemContainer, isSelected && styles.selectedItem]}>
+        <View style={styles.iconContainer}>{iconComponent}</View>
+        <View style={styles.itemDetails}>
+          <View style={styles.itemRow}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.itemTitle}>{item.Titulo_gasto}</Text>
+              <Text style={styles.itemDetail}>{formatDate(item.Fecha_creacion_gasto)}</Text>
+            </View>
+            {showExpenses && (
+            <View>  
+              <Text style={[styles.itemAmount, amountStyle]}>${item.Monto_gasto}</Text> 
+            </View>)}
+          </View>
+          <Text style={styles.itemDetail}>{item.Detalle_gasto}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    };
+    return new Intl.DateTimeFormat('es-AR', options).format(date);
+  };
+
+  // Calculate total expenses
+  const totalExpenses = filteredData.reduce((acc, item) => acc + parseFloat(item.Monto_gasto), 0);
+  const totalPositiveExpenses = filteredData.reduce((acc, item) => {
+    return item.Monto_gasto > 0 ? acc + parseFloat(item.Monto_gasto) : acc;
+  }, 0);  
+  const totalNegativeExpenses = filteredData.reduce((acc, item) => {
+    return item.Monto_gasto < 0 ? acc + parseFloat(item.Monto_gasto) : acc;
+  }, 0);
 
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
-        {currentMonth} {currentYear}
-      </Text>
-      
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TextInput
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={handleSearch}
+          placeholder="Buscar..."
+        />
+        <Picker
+          selectedValue={selectedMonth}
+          style={styles.monthPicker}
+          onValueChange={(itemValue) => {
+            setSelectedMonth(itemValue);
+            applyMonthFilter(data);
+          }}
+        >
+          {months.map(month => (
+            <Picker.Item key={month.value} label={month.label} value={month.value} color="black" />
+          ))}
+        </Picker>
+        <View style={[styles.refreshIconContainer, styles.iconContainer]}>
+          <TouchableOpacity onPress={handleRefresh}>
+            <Image source={require('../../../assets/refreshicon.png')} style={styles.refreshIcon} />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity onPress={handleToggleVisibility} style={styles.toggleButton}>
+        <Icon name={showExpenses ? 'eye' : 'eye-slash'} size={24} color="black" />
+      </TouchableOpacity>
+      </View>
+      {showExpenses && (
+        <View style={styles.totalsContainer}>
+        <View style={styles.totalColumn}>
+          <Text style={styles.totalLabel}>Gastos:</Text>
+          <Text style={styles.totalAmount}>${totalPositiveExpenses.toFixed(2)}</Text>
+        </View>
+        <View style={styles.totalColumn}>
+          <Text style={styles.totalLabel}>Ingresos:</Text>
+          <Text style={styles.totalAmount}>${totalNegativeExpenses.toFixed(2)}</Text>
+        </View>
+        <View style={styles.totalColumn}>
+          <Text style={styles.totalLabel}>Balance:</Text>
+          <Text style={styles.totalAmount}>${totalExpenses.toFixed(2)}</Text>
+        </View></View>
+      )}
       <FlatList
-        style={{ marginBottom: 25, marginTop: 15, alignContent: 'left', width: '90%', height: '55%' }}
-        data={data}
+        data={filteredData}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={{ fontSize: 14, fontWeight: 'semibold', marginBottom: 5, marginTop: 5, display: 'flex' }}>
-            <Image source={app}
-                    style={{width:50, height:50, borderRadius:99}}/>
-                    
-            <Text style={{fontSize: 20, fontWeight: 'bold'}}>
-              {item.Titulo_gasto} - ${item.Monto_gasto}
-            </Text>
-            <Text style={{fontSize: 16, fontWeight: 'semibold'}}>
-              - {item.Detalle_gasto} -
-            </Text>
-            <Text style={{fontSize: 14, fontWeight: 'semibold', color: '#000'}}>
-              {item.Nombre_categoria}
-            </Text>
-          </View>
-        )}
+        renderItem={renderItem}
+        extraData={selectedItems}
+        style={styles.flatList}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    backgroundColor: '#f5f5f5',
+    width: '95%',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginRight: 10,
+  },
+  monthPicker: {
+    height: 40,
+    width: '40%',
+    borderColor: '#007bff',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    color: 'black',
+  },
+  flatList: {
+    marginBottom: 25,
+    marginTop: 15,
+    width: '100%', // Adjusted to take up the full width
+    maxHeight: '60%', // Adjusted to set maximum height
+  },  
+  itemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 10, // Optional: Add horizontal padding
+    paddingVertical: 5, // Optional: Add vertical padding
+    borderWidth: 1, // Add a thin border
+    borderColor: Colors.lightGray, // Set the border color
+    borderRadius: 5, // Optional: Add border radius for rounded corners
+  },
+  appImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  itemDetails: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'column',
+  },
+  itemTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  itemDetail: {
+    fontSize: 16,
+  },
+  itemDate: {
+    fontSize: 14,
+    fontWeight: 'semibold',
+    color: '#000',
+  },
+  itemAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  refreshIconContainer: {
+    alignSelf: 'center', // Center the refresh icon vertically
+  },
+  refreshButton: {
+    padding: 10, // Add padding to make the button clickable
+  },
+  refreshIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain', // Ensure the icon fits within the TouchableOpacity
+    padding: 10,
+    backgroundColor: Colors.primary, // Change the button background color
+    borderRadius: 5, // Optional: Add border radius for rounded corners
+  },
+  iconContainer: {
+    width: 50, // Adjust the width to fit the icon size
+    alignItems: 'center',
+    marginRight: 15,
+    padding: 10,
+    backgroundColor: Colors.primary, // Change the button background color
+    borderRadius: 5, // Optional: Add border radius for rounded corners
+  },
+  icon: {
+    height: 24, // Set the height of the icon    
+  },
+  positiveAmount: {
+    color: 'green',
+  },
+  negativeAmount: {
+    color: 'red',
+  },
+  toggleButton: {
+    marginBottom: 10,
+  },
+  totalExpenses: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  totalsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    width: '100%',
+  },
+  totalColumn: {
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  totalAmount: {
+    fontSize: 16,
+  },
+  selectedItem: {
+    backgroundColor: '#e0e0e0',
+  },
+});
+    

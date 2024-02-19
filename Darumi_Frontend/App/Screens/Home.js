@@ -1,4 +1,4 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet} from 'react-native';
+import { View, Text, Button, Modal, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useState, useEffect  } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
@@ -51,10 +51,12 @@ export default function Home() {
 
   return (
     
-    <View style={{ padding: 20, marginTop: 25 }}>
+    <View style={styles.container}>
     <Header />
-      <MonthInfo />
-      <Button title="Agregar Gasto" onPress={() => setModalVisible(true)} />
+      <MonthInfo/>
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.addButtonLabel}>Agregar Gasto</Text>
+     </TouchableOpacity>
       <Modal
         animationType="slide"
         transparent={true}
@@ -101,8 +103,12 @@ export default function Home() {
             placeholderTextColor="#333" // Color del texto de placeholder
           />
           <View style={styles.buttonsContainer}>
-            <Button title="Guardar" onPress={handleGuardarGasto} color="#007bff" />
-            <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#dc3545" />
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.saveButton} onPress={handleGuardarGasto}>
+              <Text style={styles.saveButtonText}>Guardar</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -112,37 +118,47 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5', // Light gray background color
+    paddingTop: 30, // Adjust as needed for status bar height
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff', // Fondo blanco para el modal
+    backgroundColor: '#FFFFFF',
     padding: 20,
   },
   modalHeader: {
-    fontSize: 24,
+    fontSize: 28, // Increased font size for emphasis
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 20,
-    color: '#007bff', // Color del encabezado
+    color: '#27A9E1', // Changed header color to match the theme
   },
   picker: {
     height: 50,
-    width: '80%',
-    borderColor: '#007bff', // Color del borde del input
+    width: '80%', // Adjusted width for slightly wider input fields
+    borderColor: '#27A9E1',
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
-    color: '#333', // Color del texto del input
+    color: '#333',
+    fontSize: 16, // Increased font size for better readability
+    borderRadius: 5, // Added border radius for rounded corners
   },
   input: {
     width: '80%',
     height: 40,
-    borderColor: '#007bff', // Color del borde del input
+    borderColor: '#27A9E1',
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
-    color: '#333', // Color del texto del input
+    color: '#333',
+    fontSize: 16,
+    borderRadius: 5,
   },
   buttonsContainer: {
     flexDirection: 'row',
@@ -150,5 +166,47 @@ const styles = StyleSheet.create({
     width: '80%',
     paddingTop: 20,
     marginTop: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 100, // Adjust as needed to make space for the button
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#27A9E1', // Changed the background color to match the login screen
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  addButtonLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+    borderRadius: 10, // Increased border radius for a rounder button
+    paddingVertical: 10,
+    paddingHorizontal: 20, // Added horizontal padding for better spacing
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  saveButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 10, // Increased border radius for a rounder button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginLeft: 20, // Added margin between the buttons
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
