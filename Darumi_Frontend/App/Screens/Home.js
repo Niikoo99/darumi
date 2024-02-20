@@ -1,15 +1,17 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Button, Modal, TextInput, StyleSheet, TouchableOpacity, ScrollView  } from 'react-native';
 import React, { useState, useEffect  } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
 import MonthInfo from '../Components/Home/MonthInfo';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 export default function Home() {
   
   const { isLoaded, signOut } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  const [isExpensesSelected, setIsExpensesSelected] = useState(true); // State to track whether expenses or income is selected  
   const [categoria, setCategoria] = useState('');
   const [valor_Detalle, setValorDetalle] = useState('');
   const [valor_Monto, setValorMonto] = useState('');
@@ -17,9 +19,17 @@ export default function Home() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [data, setData] = useState('');
   const {isSignedIn, user} = useUser();
-  const handleGuardarGasto = () => {
-    console.log('Request Params:', {
-      Monto_gasto: valor_Monto,
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDetail, setEditedDetail] = useState('');
+  const [editedAmount, setEditedAmount] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleGuardar = () => {
+    const Monto_gasto = isExpensesSelected ? -valor_Monto : valor_Monto;
+
+  console.log('Request Params:', {
+      Monto_gasto,
       Categoria_gasto: categoriaSeleccionada,
       Titulo_gasto: valor_Titulo,
       Detalle_gasto: valor_Detalle,
@@ -28,7 +38,7 @@ export default function Home() {
 
     axios
       .post('http://192.168.1.131:3000/gastos', {
-        Monto_gasto: valor_Monto,
+        Monto_gasto,
         Categoria_gasto: categoriaSeleccionada,
         Titulo_gasto: valor_Titulo,
         Detalle_gasto: valor_Detalle,
@@ -46,17 +56,43 @@ export default function Home() {
         console.error(error);
       });
 
-    console.log('Handle guardar gasto called');
+    console.log('Handle guardar called');
+  };
+
+  const handleToggleSwitch = () => {
+    setIsExpensesSelected(!isExpensesSelected); // Toggle between expenses and income
+  };
+
+  // Function to handle editing an item
+  const handleEditItem = (item) => {
+    setSelectedItem(item); // Set the selected item for editing
+
+    setEditedTitle(item.Titulo_gasto);
+    setEditedDetail(item.Detalle_gasto);
+    setEditedAmount(item.Monto_gasto);
+
+    // Show the Edit modal
+    setEditModalVisible(true);
+  };
+
+  // Function to handle updating the item (called from the modal)
+  const handleUpdateItem = async (editedData) => {
+    // Implement logic to update the item using the edited data
+    console.log('Updated data:', editedData);
+    setEditModalVisible(false); // Hide the modal after updating
   };
 
   return (
     
     <View style={styles.container}>
-    <Header />
-      <MonthInfo/>
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.addButtonLabel}>Agregar Gasto</Text>
-     </TouchableOpacity>
+      <Header />
+      <MonthInfo onEditItem={handleEditItem}/>
+      <TouchableOpacity style={styles.addButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <FontAwesome5 name='balance-scale' size={20} color="white" style={styles.icon} />
+        <Text style={styles.addButtonLabel}>Agregar</Text>
+      </TouchableOpacity>
       <Modal
         animationType="slide"
         transparent={true}
@@ -65,54 +101,115 @@ export default function Home() {
           setModalVisible(false);
         }}
       >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalHeader}>Agregar Gasto</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Titulo"
-            keyboardType="default"
-            value={valor_Titulo}
-            onChangeText={(text) => setValorTitulo(text)}
-            placeholderTextColor="#333" // Color del texto de placeholder
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Detalle"
-            keyboardType="default"
-            value={valor_Detalle}
-            onChangeText={(text) => setValorDetalle(text)}
-            placeholderTextColor="#333" // Color del texto de placeholder
-          />
-          <Picker
-            selectedValue={categoriaSeleccionada}
-            onValueChange={(itemValue) => setCategoriaSeleccionada(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Seleccione una categoría" value="" />
-            <Picker.Item label="Comida" value="Comida" />
-            <Picker.Item label="Transporte" value="Transporte" />
-            <Picker.Item label="Entretenimiento" value="Entretenimiento" />
-            {/* Agrega más categorías según sea necesario */}
-          </Picker>
-          <TextInput
-            style={styles.input}
-            placeholder="Valor"
-            keyboardType="numeric"
-            value={valor_Monto}
-            onChangeText={(text) => setValorMonto(text)}
-            placeholderTextColor="#333" // Color del texto de placeholder
-          />
-          <View style={styles.buttonsContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleGuardarGasto}>
-              <Text style={styles.saveButtonText}>Guardar</Text>
-            </TouchableOpacity>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalHeader}>Agregar balance</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Titulo"
+                keyboardType="default"
+                value={valor_Titulo}
+                onChangeText={(text) => setValorTitulo(text)}
+                placeholderTextColor="#333" // Color del texto de placeholder
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Detalle"
+                keyboardType="default"
+                value={valor_Detalle}
+                onChangeText={(text) => setValorDetalle(text)}
+                placeholderTextColor="#333" // Color del texto de placeholder
+              />
+              <Picker
+                selectedValue={categoriaSeleccionada}
+                onValueChange={(itemValue) => setCategoriaSeleccionada(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Seleccione una categoría" value="" />
+                <Picker.Item label="Comida" value="Comida" />
+                <Picker.Item label="Transporte" value="Transporte" />
+                <Picker.Item label="Entretenimiento" value="Entretenimiento" />
+                {/* Agrega más categorías según sea necesario */}
+              </Picker>
+              <View style={styles.switchContainer}>
+              <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, isExpensesSelected ? styles.selectedSwitch : null]}>
+                <FontAwesome5 name="money-bill-wave" size={20} color="#333" style={styles.icon} />
+                <Text style={[styles.switchText, isExpensesSelected ? styles.selectedText : null]}>Gasto</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, !isExpensesSelected ? styles.selectedSwitch : null]}>
+                <FontAwesome5 name="money-bill-alt" size={20} color="#333" style={styles.icon} />
+                <Text style={[styles.switchText, !isExpensesSelected ? styles.selectedText : null]}>Ingreso</Text>
+              </TouchableOpacity>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Valor"
+                keyboardType="numeric"
+                value={valor_Monto}
+                onChangeText={(text) => setValorMonto(text)}
+                color={isExpensesSelected ? "red" : "green"}
+                placeholderTextColor="#333" // Color del texto de placeholder
+              />
+            </View>      
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleGuardar}>
+                <Text style={styles.saveButtonText}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
-      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+          <Text style={styles.modalHeader}>Editar balance</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Titulo"
+                keyboardType="default"
+                value={editedTitle}
+                onChangeText={(text) => setEditedTitle(text)}
+                placeholderTextColor="#333" // Color del texto de placeholder                
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Detalle"
+                keyboardType="default"
+                value={editedDetail}
+                onChangeText={(text) => setEditedDetail(text)}
+                placeholderTextColor="#333" // Color del texto de placeholder
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Valor"
+                keyboardType="numeric"
+                value={editedAmount.toString()}
+                onChangeText={(text) => setEditedAmount(text)}
+                color={editedAmount > 0 ? "green" : "red"}
+                placeholderTextColor="#333" // Color del texto de placeholder
+              />
+              <View style={styles.buttonsContainer}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setEditModalVisible(false)}>
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveButton} onPress={handleUpdateItem}>
+                  <Text style={styles.saveButtonText}>Guardar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -124,73 +221,79 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5', // Light gray background color
     paddingTop: 30, // Adjust as needed for status bar height
   },
-  modalContainer: {
+  modalBackground: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
     padding: 20,
+    width: '80%',
   },
   modalHeader: {
-    fontSize: 28, // Increased font size for emphasis
+    fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 20,
-    color: '#27A9E1', // Changed header color to match the theme
+    textAlign: 'center',
+    color: '#27A9E1',
   },
-  picker: {
-    height: 50,
-    width: '80%', // Adjusted width for slightly wider input fields
-    borderColor: '#27A9E1',
-    borderWidth: 1,
+  inputContainer: {
     marginBottom: 20,
-    paddingHorizontal: 10,
-    color: '#333',
-    fontSize: 16, // Increased font size for better readability
-    borderRadius: 5, // Added border radius for rounded corners
   },
   input: {
-    width: '80%',
+    width: '100%',
     height: 40,
     borderColor: '#27A9E1',
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 10,
     paddingHorizontal: 10,
     color: '#333',
     fontSize: 16,
     borderRadius: 5,
   },
-  buttonsContainer: {
+  picker: {
+    height: 50,
+    width: '100%',
+    borderColor: '#27A9E1',
+    borderWidth: 1,
+    marginBottom: 10,
+    color: '#333',
+    fontSize: 16,
+    borderRadius: 5,
+  },
+  switchContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
-    paddingTop: 20,
-    marginTop: 20,
+    justifyContent: 'space-around',
+    marginBottom: 20,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 100, // Adjust as needed to make space for the button
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: '#27A9E1', // Changed the background color to match the login screen
-    paddingVertical: 15,
-    borderRadius: 10,
+  switchButton: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  addButtonLabel: {
-    fontSize: 18,
+  switchText: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#333',
+    marginLeft: 5,
+  },
+  selectedText: {
+    color: '#27A9E1',
+  },
+  icon: {
+    marginRight: 5,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
   cancelButton: {
     backgroundColor: '#dc3545',
-    borderRadius: 10, // Increased border radius for a rounder button
+    borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 20, // Added horizontal padding for better spacing
+    paddingHorizontal: 20,
   },
   cancelButtonText: {
     color: '#fff',
@@ -199,14 +302,42 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#007bff',
-    borderRadius: 10, // Increased border radius for a rounder button
+    borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginLeft: 20, // Added margin between the buttons
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 100, // Adjust as needed to make space for the button
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  addButton: {
+    backgroundColor: '#27A9E1',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 10,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',    
+  },
+  addButtonLabel: {
+    fontSize: 20,
+    fontWeight: 'bold',    
+    color: 'white',
+    marginLeft: 15,
   },
 });

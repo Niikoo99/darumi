@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
@@ -7,7 +7,7 @@ import Colors from '../../../assets/shared/Colors';
 import app from './../../../assets/images/darumi.png';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
-export default function MonthInfo() {
+export default function MonthInfo({ onEditItem }) {
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
@@ -26,6 +26,10 @@ export default function MonthInfo() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [selectedItems, setSelectedItems] = useState([]);
   const [showExpenses, setShowExpenses] = useState(true); // State variable to control visibility  
+  const [selectedItem, setSelectedItem] = useState(null); // State variable to track selected item for editing
+  const [editedTitle, setEditedTitle] = useState(''); // State variable to store edited title
+  const [editedDetail, setEditedDetail] = useState(''); // State variable to store edited detail
+  const [editedAmount, setEditedAmount] = useState(0); // State variable to store edited amount
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +49,43 @@ export default function MonthInfo() {
 
     fetchData();
   }, [isSignedIn, user]);
+
+  const handleEditItem = (item) => {
+    setSelectedItem(item); // Set the selected item for editing
+    setEditModalVisible(true); // Show the edit modal
+    setEditedTitle(item.Titulo_gasto); // Initialize edited title with current item title
+    setEditedDetail(item.Detalle_gasto); // Initialize edited detail with current item detail
+    setEditedAmount(item.Monto_gasto.toString()); // Initialize edited amount with current item amount
+  };
+
+  const handleUpdateItem = async () => {
+    try {
+      // Send a PUT request to update the item
+      await axios.put(`http://192.168.1.131:3000/gastos/${selectedItem.id}`, {
+        Titulo_gasto: editedTitle,
+        Detalle_gasto: editedDetail,
+        Monto_gasto: editedAmount,
+      });
+      // Update the local data with the edited item
+      const updatedData = data.map(item => {
+        if (item.id === selectedItem.id) {
+          return {
+            ...item,
+            Titulo_gasto: editedTitle,
+            Detalle_gasto: editedDetail,
+            Monto_gasto: editedAmount,
+          };
+        }
+        return item;
+      });
+      setData(updatedData);
+      setFilteredData(updatedData);
+      setEditModalVisible(false); // Hide the edit modal after successful update
+    } catch (error) {
+      console.error('Error updating item:', error);
+      // Handle error
+    }
+  };
   
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -70,10 +111,20 @@ export default function MonthInfo() {
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setSearchQuery('');
     setSelectedMonth('');
-    setFilteredData(data);
+    setLoading(true); // Set loading state to true to show the loading indicator
+    try {
+      const response = await axios.get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } });
+      setData(response.data);
+      setFilteredData(response.data);
+      setError(null); // Clear any previous error
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false); // Set loading state to false after fetching data
+    }
   };
 
   // Array of months for the picker
@@ -122,7 +173,10 @@ export default function MonthInfo() {
     const isSelected = selectedItems.includes(item.id); // Assuming each item has a unique identifier like 'id'
   
     const itemStyle = {
-      backgroundColor: isSelected ? '#e0e0e0' : 'transparent', // Change background color based on selection
+      // backgroundColor: isSelected ? '#e0e0e0' : 'transparent', // Change background color based on selection
+      // Apply different background color for items from different months
+      // Check if the month of the item's creation date matches the current month
+      backgroundColor: new Date(item.Fecha_creacion_gasto).getMonth() + 1 === currentDate.getMonth() + 1 ? 'white' : 'lightgray'
     };
 
     const toggleSelection = (itemId) => {
@@ -158,10 +212,12 @@ export default function MonthInfo() {
         iconComponent = <Icon name="shopping-cart" size={24} color="black" style={styles.icon} />; // Default icon
         break;
     }
+    
+    const isEditable = new Date(item.Fecha_creacion_gasto).getMonth() + 1 === currentDate.getMonth() + 1;
   
     return (
-      <TouchableOpacity onPress={() => toggleSelection(item.id)}>
-      <View style={[styles.itemContainer, isSelected && styles.selectedItem]}>
+      <TouchableOpacity onPress={() => toggleSelection(item.id)} onLongPress={() => isEditable && onEditItem(item)}>
+      <View style={[styles.itemContainer, isSelected && styles.selectedItem, itemStyle]}>
         <View style={styles.iconContainer}>{iconComponent}</View>
         <View style={styles.itemDetails}>
           <View style={styles.itemRow}>
@@ -176,7 +232,7 @@ export default function MonthInfo() {
           </View>
           <Text style={styles.itemDetail}>{item.Detalle_gasto}</Text>
         </View>
-      </View>
+      </View>      
     </TouchableOpacity>
     );
   };
@@ -197,10 +253,10 @@ export default function MonthInfo() {
   // Calculate total expenses
   const totalExpenses = filteredData.reduce((acc, item) => acc + parseFloat(item.Monto_gasto), 0);
   const totalPositiveExpenses = filteredData.reduce((acc, item) => {
-    return item.Monto_gasto > 0 ? acc + parseFloat(item.Monto_gasto) : acc;
+    return item.Monto_gasto < 0 ? acc + parseFloat(item.Monto_gasto) : acc;
   }, 0);  
   const totalNegativeExpenses = filteredData.reduce((acc, item) => {
-    return item.Monto_gasto < 0 ? acc + parseFloat(item.Monto_gasto) : acc;
+    return item.Monto_gasto > 0 ? acc + parseFloat(item.Monto_gasto) : acc;
   }, 0);
 
   return (
@@ -292,11 +348,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: 'black',
   },
-  flatList: {
-    marginBottom: 25,
-    marginTop: 15,
+  flatList: {    
+    marginTop: 10,
     width: '100%', // Adjusted to take up the full width
-    maxHeight: '60%', // Adjusted to set maximum height
+    maxHeight: '75%', // Adjusted to set maximum height
   },  
   itemContainer: {
     flexDirection: 'row',
@@ -304,7 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10, // Optional: Add horizontal padding
     paddingVertical: 5, // Optional: Add vertical padding
-    borderWidth: 1, // Add a thin border
+    borderWidth: 2, // Add a thin border
     borderColor: Colors.lightGray, // Set the border color
     borderRadius: 5, // Optional: Add border radius for rounded corners
   },
@@ -401,6 +456,12 @@ const styles = StyleSheet.create({
   },
   selectedItem: {
     backgroundColor: '#e0e0e0',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 });
     
