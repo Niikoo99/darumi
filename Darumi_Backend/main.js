@@ -25,6 +25,7 @@ const usuarios = require('./methods/methodUsuarios');
 const categorias = require('./methods/methodCategorias');
 const estados = require('./methods/methodEstados');
 const gastos = require('./methods/methodGastos');
+const pagosHabituales = require('./methods/methodPagosHabituales');
 const objetivos = require('./methods/methodObjetivos');
 const tipos = require('./methods/methodTiposObjetivos');
 const metas = require('./methods/methodUsuariosObjetivos');
@@ -38,6 +39,7 @@ app.use('/', gastos);
 app.use('/', objetivos);
 app.use('/', tipos);
 app.use('/', metas);
+app.use('/', pagosHabituales);
 
 // Redirect to /hola
 app.get('/', (req, res) => {
