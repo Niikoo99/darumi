@@ -98,3 +98,63 @@ module.exports = gastos;
 console.log(`Modulo ${fileName} cargado con exito`);
 
 
+// PUT actualizar gasto
+gastos.put('/gastos/:id', (req, res) => {
+  // Obtén los datos actualizados del gasto desde el cuerpo de la solicitud
+  // TODO: Ahora actuliza todo pero deberiamos ver que quitar
+  const { Categoria_gasto, Detalle_gasto, Id_usuario, Monto_gasto, Titulo_gasto } = req.body;
+  const gastoId = req.params.id;
+
+  // Log the call and its parameters
+  console.log(`Update gasto request:
+  Gasto ID: ${gastoId}
+  Monto: ${Monto_gasto}
+  Titulo: ${Titulo_gasto}
+  Detalle: ${Detalle_gasto}
+  Categoria: ${Categoria_gasto}
+  Usuario: ${Id_usuario}`);
+
+  // Realiza la actualización en la base de datos
+  connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
+    if (error) throw error;
+    connection.query('SET @idCategoria = (SELECT Id_categoria FROM categorias WHERE Nombre_categoria = ?)', [Categoria_gasto], (error, results, fields) => {
+      if (error) throw error;
+      connection.query('UPDATE gastos SET Monto_gasto = ?, Titulo_gasto = ?, Detalle_gasto = ?, Categoria_gasto = @idCategoria, Id_usuario = @idUser WHERE Id_gasto = ?', [Monto_gasto, Titulo_gasto, Detalle_gasto, gastoId], (error, results, fields) => {
+        if (error) {
+          console.error('Error al ejecutar la consulta MySQL', error);
+          res.status(500).json({ error: 'Error de servidor' });
+        } else {
+          // Devuelve el ID del gasto actualizado
+          res.json({ id: gastoId });
+          // res.json({ id, monto, titulo, detalle, fecha, categoria, usuario });
+        }
+      });
+    });
+  });
+});
+
+module.exports = gastos;
+console.log(`Módulo ${fileName} cargado con éxito`);
+
+// PUT actualizar campo 'Active' de un gasto
+gastos.put('/gastos/:id/active', (req, res) => {
+  // Obtén el ID del gasto desde la URL
+  const gastoId = req.params.id;
+
+  // Log the call and its parameters
+  console.log(`Update Active field request for gasto ID ${gastoId}`);
+
+  // Realiza la actualización en la base de datos
+  connection.query('UPDATE gastos SET Active = 0 WHERE Id_gasto = ?', [gastoId], (error, results, fields) => {
+    if (error) {
+      console.error('Error al ejecutar la consulta MySQL', error);
+      res.status(500).json({ error: 'Error de servidor' });
+    } else {
+      // Devuelve el ID del gasto actualizado
+      res.json({ id: gastoId, active: 0 });
+    }
+  });
+});
+
+module.exports = gastos;
+console.log(`Módulo ${fileName} cargado con éxito`);
