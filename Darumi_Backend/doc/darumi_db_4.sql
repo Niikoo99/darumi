@@ -43,7 +43,8 @@ INSERT INTO `categorias` (`Id_categoria`, `Nombre_categoria`) VALUES
 (4, 'Mecanica'),
 (5, 'Combustibles'),
 (6, 'Vestimenta/Calzado'),
-(7, 'Electrodomestico');
+(7, 'Electrodomestico'),
+(8, 'Ingresos');
 
 -- --------------------------------------------------------
 

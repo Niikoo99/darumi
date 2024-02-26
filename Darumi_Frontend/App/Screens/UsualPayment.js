@@ -53,9 +53,9 @@ export default function UsualPayment() {
         renderItem={({ item }) => (
           <View style={styles.paymentItem}>
             <Text style={styles.paymentName}>{item.name}</Text>
-            <Text style={styles.paymentAmount}>${item.amount}</Text>
+            <Text style={styles.incomeAmount}>${Math.abs(item.amount)}</Text>            
             <TouchableOpacity onPress={() => handleRemovePayment(item.id)}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
+              <FontAwesome5 name="trash-alt" size={20} color="black" />
             </TouchableOpacity>
           </View>
         )}
@@ -67,9 +67,9 @@ export default function UsualPayment() {
         renderItem={({ item }) => (
           <View style={styles.paymentItem}>
             <Text style={styles.paymentName}>{item.name}</Text>
-            <Text style={styles.paymentAmount}>${item.amount}</Text>
+            <Text style={styles.expenseAmount}>${Math.abs(item.amount)}</Text>            
             <TouchableOpacity onPress={() => handleRemovePayment(item.id)}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
+              <FontAwesome5 name="trash-alt" size={20} color="black" />
             </TouchableOpacity>
           </View>
         )}
@@ -202,5 +202,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 5,
+  },
+  expenseAmount: {
+    color: '#dc3545', // Dark red for expenses
+  },
+  incomeAmount: {
+    color: '#28a745', // Dark green for incomes
   },
 });

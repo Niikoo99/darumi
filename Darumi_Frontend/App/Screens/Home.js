@@ -12,12 +12,15 @@ export default function Home() {
   const { isLoaded, signOut } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [isExpensesSelected, setIsExpensesSelected] = useState(true); // State to track whether expenses or income is selected  
+  const [categoriaIngresos, setCategoriaIngresos] = useState('');
   const [categoria, setCategoria] = useState('');
   const [valor_Detalle, setValorDetalle] = useState('');
   const [valor_Monto, setValorMonto] = useState('');
   const [valor_Titulo, setValorTitulo] = useState('');
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
-  const [data, setData] = useState('');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const {isSignedIn, user} = useUser();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -25,12 +28,39 @@ export default function Home() {
   const [editedAmount, setEditedAmount] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (isSignedIn) {
+        setLoading(true);
+        try {
+          const response = await axios.get(`http://192.168.1.131:3000/categorias/`);
+          setData(response.data);
+
+          // Find the category with Nombre_categoria "Ingresos" and store its Id_categoria
+          const ingresosCategory = response.data.find(category => category.Nombre_categoria === 'Ingresos');
+          if (ingresosCategory) {
+            setCategoriaIngresos(ingresosCategory.Id_categoria);
+          }
+
+          console.log(ingresosCategory);
+        } catch (error) {
+          setError(error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [isSignedIn, user]);
+
   const handleGuardar = () => {
     const Monto_gasto = isExpensesSelected ? -valor_Monto : valor_Monto;
+    const auxIdCategory = isExpensesSelected ? categoriaIngresos : categoriaSeleccionada;
 
   console.log('Request Params:', {
       Monto_gasto,
-      Categoria_gasto: categoriaSeleccionada,
+      Id_categoria: auxIdCategory,
       Titulo_gasto: valor_Titulo,
       Detalle_gasto: valor_Detalle,
       Id_usuario: user.id,
@@ -39,7 +69,7 @@ export default function Home() {
     axios
       .post('http://192.168.1.131:3000/gastos', {
         Monto_gasto,
-        Categoria_gasto: categoriaSeleccionada,
+        Id_categoria: auxIdCategory,
         Titulo_gasto: valor_Titulo,
         Detalle_gasto: valor_Detalle,
         Id_usuario: user.id,
@@ -82,6 +112,27 @@ export default function Home() {
     setEditModalVisible(false); // Hide the modal after updating
   };
 
+  const renderItem = ({ item }) => {
+    if (!item || item.Nombre_categoria === 'Ingresos') {
+      return null; // Return null if item is undefined
+    }
+  
+    if (!data || !Array.isArray(data)) {
+      return null; // Return null if data is not available or not an array
+    }
+
+    if (item.Nombre_categoria === 'Ingresos'){
+      setCategoriaIngresos(item.Id_categoria);
+      console.log(item);
+    }
+  
+    return (
+      <Picker.Item label={item.Nombre_categoria} value={item.Id_categoria} />
+    );
+  };
+
+  const filteredData = data.filter(item => item.Nombre_categoria !== 'Ingresos');  
+
   return (
     
     <View style={styles.container}>
@@ -121,17 +172,18 @@ export default function Home() {
                 onChangeText={(text) => setValorDetalle(text)}
                 placeholderTextColor="#333" // Color del texto de placeholder
               />
-              <Picker
-                selectedValue={categoriaSeleccionada}
-                onValueChange={(itemValue) => setCategoriaSeleccionada(itemValue)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Seleccione una categoría" value="" />
-                <Picker.Item label="Comida" value="Comida" />
-                <Picker.Item label="Transporte" value="Transporte" />
-                <Picker.Item label="Entretenimiento" value="Entretenimiento" />
-                {/* Agrega más categorías según sea necesario */}
-              </Picker>
+              {isExpensesSelected && data && data.length > 0 ? (
+                <Picker
+                  selectedValue={categoriaSeleccionada}
+                  onValueChange={(itemValue) => setCategoriaSeleccionada(itemValue)}
+                  style={styles.picker}
+                  renderItem={renderItem}
+                >
+                  {filteredData.map((item) => (
+                    <Picker.Item label={item.Nombre_categoria} value={item.Id_categoria} />
+                  ))}
+                </Picker>
+              ) : null}
               <View style={styles.switchContainer}>
               <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, isExpensesSelected ? styles.selectedSwitch : null]}>
                 <FontAwesome5 name="money-bill-wave" size={20} color="#333" style={styles.icon} />

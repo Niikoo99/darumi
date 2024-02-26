@@ -48,7 +48,7 @@ gastos.get('/gastos', (req, res) => {
 
   console.log(`API call: GET /gastos, User ID: ${userId}`);
 
-  const query = `SELECT G.Monto_gasto, G.Titulo_gasto, G.Detalle_gasto, G.Fecha_creacion_gasto, C.Nombre_categoria FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario INNER JOIN categorias C ON C.Id_categoria = G.Categoria_gasto WHERE U.Identifier_usuario = '${userId}' ORDER BY G.Fecha_creacion_gasto DESC`;
+  const query = `SELECT G.Monto_gasto, G.Titulo_gasto, G.Detalle_gasto, G.Fecha_creacion_gasto, C.Nombre_categoria FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario INNER JOIN categorias C ON C.Id_categoria = G.Id_categoria WHERE U.Identifier_usuario = '${userId}' ORDER BY G.Fecha_creacion_gasto DESC`;
   console.log(`Executing query: ${query}`);
 
   connection.query(query, [userId], (error, results) => {
@@ -66,22 +66,20 @@ gastos.get('/gastos', (req, res) => {
 // POST nuevo gasto
 gastos.post('/gastos', (req, res) => {
   // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
-  const { Categoria_gasto, Detalle_gasto, Id_usuario, Monto_gasto, Titulo_gasto } = req.body;
+  const { Id_categoria, Detalle_gasto, Id_usuario, Monto_gasto, Titulo_gasto } = req.body;
   
   // Log the call and its parameters
   console.log(`New gasto request:
   Monto: ${Monto_gasto}
   Titulo: ${Titulo_gasto}
   Detalle: ${Detalle_gasto}
-  Categoria: ${Categoria_gasto}
+  Categoria: ${Id_categoria}
   Usuario: ${Id_usuario}`);
 
   // Realiza la inserción en la base de datos
   connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
     if (error) throw error;
-    connection.query('SET @idCategoria = (SELECT Id_categoria FROM categorias WHERE Nombre_categoria = ?)', [Categoria_gasto], (error, results, fields) => {
-      if (error) throw error;
-      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, @idCategoria, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto], (error, results, fields) => {
+      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria, Id_usuario) VALUES (?, ?, ?, ?, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria], (error, results, fields) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });
@@ -93,7 +91,7 @@ gastos.post('/gastos', (req, res) => {
       });
     });
   });
-});
+  
 module.exports = gastos;
 console.log(`Modulo ${fileName} cargado con exito`);
 
@@ -116,10 +114,8 @@ gastos.put('/gastos/:id', (req, res) => {
 
   // Realiza la actualización en la base de datos
   connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
-    if (error) throw error;
-    connection.query('SET @idCategoria = (SELECT Id_categoria FROM categorias WHERE Nombre_categoria = ?)', [Categoria_gasto], (error, results, fields) => {
       if (error) throw error;
-      connection.query('UPDATE gastos SET Monto_gasto = ?, Titulo_gasto = ?, Detalle_gasto = ?, Categoria_gasto = @idCategoria, Id_usuario = @idUser WHERE Id_gasto = ?', [Monto_gasto, Titulo_gasto, Detalle_gasto, gastoId], (error, results, fields) => {
+      connection.query('UPDATE gastos SET Monto_gasto = ?, Titulo_gasto = ?, Detalle_gasto = ?, Id_categoria = @idCategoria, Id_usuario = @idUser WHERE Id_gasto = ?', [Monto_gasto, Titulo_gasto, Detalle_gasto, gastoId], (error, results, fields) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });
@@ -131,7 +127,6 @@ gastos.put('/gastos/:id', (req, res) => {
       });
     });
   });
-});
 
 module.exports = gastos;
 console.log(`Módulo ${fileName} cargado con éxito`);

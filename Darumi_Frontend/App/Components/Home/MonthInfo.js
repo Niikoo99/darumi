@@ -227,7 +227,7 @@ export default function MonthInfo({ onEditItem }) {
             </View>
             {showExpenses && (
             <View>  
-              <Text style={[styles.itemAmount, amountStyle]}>${item.Monto_gasto}</Text> 
+              <Text style={[styles.itemAmount, amountStyle]}>${Math.abs(item.Monto_gasto)}</Text> 
             </View>)}
           </View>
           <Text style={styles.itemDetail}>{item.Detalle_gasto}</Text>
@@ -292,16 +292,16 @@ export default function MonthInfo({ onEditItem }) {
       {showExpenses && (
         <View style={styles.totalsContainer}>
         <View style={styles.totalColumn}>
-          <Text style={styles.totalLabel}>Gastos:</Text>
-          <Text style={styles.totalAmount}>${totalPositiveExpenses.toFixed(2)}</Text>
+          <Text style={styles.totalLabel}>Gastos</Text>
+          <Text style={styles.negativeAmountTotal}>${Math.abs(totalPositiveExpenses.toFixed(2))}</Text>
         </View>
         <View style={styles.totalColumn}>
-          <Text style={styles.totalLabel}>Ingresos:</Text>
-          <Text style={styles.totalAmount}>${totalNegativeExpenses.toFixed(2)}</Text>
+          <Text style={styles.totalLabel}>Ingresos</Text>
+          <Text style={styles.positiveAmountTotal}>${Math.abs(totalNegativeExpenses.toFixed(2))}</Text>
         </View>
         <View style={styles.totalColumn}>
-          <Text style={styles.totalLabel}>Balance:</Text>
-          <Text style={styles.totalAmount}>${totalExpenses.toFixed(2)}</Text>
+          <Text style={styles.totalLabel}>Balance</Text>
+          <Text style={totalExpenses > 0 ? styles.positiveAmountTotal : styles.negativeAmountTotal}>${totalExpenses.toFixed(2)}</Text>
         </View></View>
       )}
       <FlatList
@@ -431,10 +431,17 @@ const styles = StyleSheet.create({
   toggleButton: {
     marginBottom: 10,
   },
-  totalExpenses: {
+  positiveAmountTotal: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
+    color: 'green',
+  },
+  negativeAmountTotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    color: 'red',
   },
   totalsContainer: {
     flexDirection: 'row',
@@ -450,9 +457,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
-  },
-  totalAmount: {
-    fontSize: 16,
   },
   selectedItem: {
     backgroundColor: '#e0e0e0',
