@@ -5,7 +5,7 @@ import Header from '../Components/Home/Header';
 import MonthInfo from '../Components/Home/MonthInfo';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 export default function Home() {
   
@@ -141,7 +141,7 @@ export default function Home() {
       <TouchableOpacity style={styles.addButton}
         onPress={() => setModalVisible(true)}
       >
-        <FontAwesome5 name='balance-scale' size={20} color="white" style={styles.icon} />
+        <FontAwesome6 name='balance-scale' size={20} color="white" style={styles.icon} />
         <Text style={styles.addButtonLabel}>Agregar</Text>
       </TouchableOpacity>
       <Modal
@@ -186,11 +186,11 @@ export default function Home() {
               ) : null}
               <View style={styles.switchContainer}>
               <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, isExpensesSelected ? styles.selectedSwitch : null]}>
-                <FontAwesome5 name="money-bill-wave" size={20} color="#333" style={styles.icon} />
+                <FontAwesome6 name="money-bill-wave" size={20} color="#333" style={styles.icon} />
                 <Text style={[styles.switchText, isExpensesSelected ? styles.selectedText : null]}>Gasto</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, !isExpensesSelected ? styles.selectedSwitch : null]}>
-                <FontAwesome5 name="money-bill-alt" size={20} color="#333" style={styles.icon} />
+                <FontAwesome6 name="money-bill-alt" size={20} color="#333" style={styles.icon} />
                 <Text style={[styles.switchText, !isExpensesSelected ? styles.selectedText : null]}>Ingreso</Text>
               </TouchableOpacity>
             </View>

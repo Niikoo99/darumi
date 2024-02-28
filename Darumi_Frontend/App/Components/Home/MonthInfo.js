@@ -5,7 +5,7 @@ import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import Colors from '../../../assets/shared/Colors';
 import app from './../../../assets/images/darumi.png';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/FontAwesome6';
 
 export default function MonthInfo({ onEditItem }) {
   const capitalizeFirstLetter = (string) => {
@@ -205,11 +205,23 @@ export default function MonthInfo({ onEditItem }) {
       case 'combustibles':
         iconComponent = <Icon name="gas-pump" size={24} color="black" style={styles.icon} />;
         break;
+      case 'mecanica':
+        iconComponent = <Icon name="gear" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'vestimenta/calzado':
+        iconComponent = <Icon name="bag-shopping" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'hogar':
+        iconComponent = <Icon name="house-chimney" size={24} color="black" style={styles.icon} />;
+        break;
+      case 'ingresos':
+          iconComponent = <Icon name="dollar-sign" size={24} color="black" style={styles.icon} />;
+          break;
       case 'varios':
-        iconComponent = <Icon name="archive" size={24} color="black" style={styles.icon} />;
+        iconComponent = <Icon name="cash-register" size={24} color="black" style={styles.icon} />;
         break;
       default:
-        iconComponent = <Icon name="shopping-cart" size={24} color="black" style={styles.icon} />; // Default icon
+        iconComponent = <Icon name="bag-shopping" size={24} color="black" style={styles.icon} />; // Default icon
         break;
     }
     
