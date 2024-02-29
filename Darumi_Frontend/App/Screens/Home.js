@@ -5,7 +5,7 @@ import Header from '../Components/Home/Header';
 import MonthInfo from '../Components/Home/MonthInfo';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import { FontAwesome6 } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 export default function Home() {
   
@@ -42,7 +42,7 @@ export default function Home() {
             setCategoriaIngresos(ingresosCategory.Id_categoria);
           }
 
-          console.log(ingresosCategory);
+          console.log(categoriaIngresos);
         } catch (error) {
           setError(error);
         } finally {
@@ -56,7 +56,7 @@ export default function Home() {
 
   const handleGuardar = () => {
     const Monto_gasto = isExpensesSelected ? -valor_Monto : valor_Monto;
-    const auxIdCategory = isExpensesSelected ? categoriaIngresos : categoriaSeleccionada;
+    const auxIdCategory = isExpensesSelected ? categoriaSeleccionada : categoriaIngresos;
 
   console.log('Request Params:', {
       Monto_gasto,
@@ -141,7 +141,7 @@ export default function Home() {
       <TouchableOpacity style={styles.addButton}
         onPress={() => setModalVisible(true)}
       >
-        <FontAwesome6 name='balance-scale' size={20} color="white" style={styles.icon} />
+        <FontAwesome5 name='balance-scale' size={20} color="white" style={styles.icon} />
         <Text style={styles.addButtonLabel}>Agregar</Text>
       </TouchableOpacity>
       <Modal
@@ -180,17 +180,17 @@ export default function Home() {
                   renderItem={renderItem}
                 >
                   {filteredData.map((item) => (
-                    <Picker.Item label={item.Nombre_categoria} value={item.Id_categoria} />
+                    <Picker.Item label={item.Nombre_categoria} value={item.Id_categoria} key={item.Id_categoria} />
                   ))}
                 </Picker>
               ) : null}
               <View style={styles.switchContainer}>
               <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, isExpensesSelected ? styles.selectedSwitch : null]}>
-                <FontAwesome6 name="money-bill-wave" size={20} color="#333" style={styles.icon} />
+                <FontAwesome5 name="money-bill-wave" size={20} color="#333" style={styles.icon} />
                 <Text style={[styles.switchText, isExpensesSelected ? styles.selectedText : null]}>Gasto</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleToggleSwitch} style={[styles.switchButton, !isExpensesSelected ? styles.selectedSwitch : null]}>
-                <FontAwesome6 name="money-bill-alt" size={20} color="#333" style={styles.icon} />
+                <FontAwesome5 name="money-bill-alt" size={20} color="#333" style={styles.icon} />
                 <Text style={[styles.switchText, !isExpensesSelected ? styles.selectedText : null]}>Ingreso</Text>
               </TouchableOpacity>
             </View>

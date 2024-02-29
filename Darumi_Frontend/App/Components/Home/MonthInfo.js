@@ -5,7 +5,7 @@ import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import Colors from '../../../assets/shared/Colors';
 import app from './../../../assets/images/darumi.png';
-import Icon from 'react-native-vector-icons/FontAwesome6';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export default function MonthInfo({ onEditItem }) {
   const capitalizeFirstLetter = (string) => {
@@ -22,7 +22,7 @@ export default function MonthInfo({ onEditItem }) {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('2');
   const { isLoaded, isSignedIn, user } = useUser();
   const [selectedItems, setSelectedItems] = useState([]);
   const [showExpenses, setShowExpenses] = useState(true); // State variable to control visibility  
@@ -103,7 +103,7 @@ export default function MonthInfo({ onEditItem }) {
         const itemMonth = new Date(item.Fecha_creacion_gasto).getMonth() + 1; // Month is zero-indexed, so add 1
         console.log('itemMonth Value:', itemMonth);
         console.log('selectedMonth Value:', selectedMonth);
-        return itemMonth.toString() === selectedMonth.toString(); // Compare as strings to ensure strict equality
+        return itemMonth.toString() === '2'.toString(); // Compare as strings to ensure strict equality
       });
       setFilteredData(filtered);
     } else {
@@ -206,13 +206,13 @@ export default function MonthInfo({ onEditItem }) {
         iconComponent = <Icon name="gas-pump" size={24} color="black" style={styles.icon} />;
         break;
       case 'mecanica':
-        iconComponent = <Icon name="gear" size={24} color="black" style={styles.icon} />;
+        iconComponent = <Icon name="cog" size={24} color="black" style={styles.icon} />;
         break;
       case 'vestimenta/calzado':
-        iconComponent = <Icon name="bag-shopping" size={24} color="black" style={styles.icon} />;
+        iconComponent = <Icon name="socks" size={24} color="black" style={styles.icon} />;
         break;
       case 'hogar':
-        iconComponent = <Icon name="house-chimney" size={24} color="black" style={styles.icon} />;
+        iconComponent = <Icon name="home" size={24} color="black" style={styles.icon} />;
         break;
       case 'ingresos':
           iconComponent = <Icon name="dollar-sign" size={24} color="black" style={styles.icon} />;

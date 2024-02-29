@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, Button } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { FontAwesome6 } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 export default function UsualPayment() {
   const [payments, setPayments] = useState([
@@ -55,7 +55,7 @@ export default function UsualPayment() {
             <Text style={styles.paymentName}>{item.name}</Text>
             <Text style={styles.incomeAmount}>${Math.abs(item.amount)}</Text>            
             <TouchableOpacity onPress={() => handleRemovePayment(item.id)}>
-              <FontAwesome6 name="trash-alt" size={20} color="black" />
+              <FontAwesome5 name="trash-alt" size={20} color="black" />
             </TouchableOpacity>
           </View>
         )}
@@ -69,7 +69,7 @@ export default function UsualPayment() {
             <Text style={styles.paymentName}>{item.name}</Text>
             <Text style={styles.expenseAmount}>${Math.abs(item.amount)}</Text>            
             <TouchableOpacity onPress={() => handleRemovePayment(item.id)}>
-              <FontAwesome6 name="trash-alt" size={20} color="black" />
+              <FontAwesome5 name="trash-alt" size={20} color="black" />
             </TouchableOpacity>
           </View>
         )}
@@ -103,7 +103,7 @@ export default function UsualPayment() {
         <TouchableOpacity style={styles.addButton}
           onPress={handleAddPayment}
         >
-          <FontAwesome6 name='balance-scale' size={20} color="white" style={styles.icon} />
+          <FontAwesome5 name='balance-scale' size={20} color="white" style={styles.icon} />
           <Text style={styles.addButtonLabel}>Agregar</Text>
         </TouchableOpacity>      
       </View>
