@@ -29,6 +29,7 @@ const pagosHabituales = require('./methods/methodPagosHabituales');
 const objetivos = require('./methods/methodObjetivos');
 const tipos = require('./methods/methodTiposObjetivos');
 const metas = require('./methods/methodUsuariosObjetivos');
+const { router: automatizacionPagos } = require('./methods/methodAutomatizacionPagos');
 
 app.use(express.json());
 
@@ -40,6 +41,7 @@ app.use('/', objetivos);
 app.use('/', tipos);
 app.use('/', metas);
 app.use('/', pagosHabituales);
+app.use('/', automatizacionPagos);
 
 // Redirect to /hola
 app.get('/', (req, res) => {
@@ -59,5 +61,19 @@ app.get('/chau', (req, res) => {
 
 app.listen(port, () => {
   console.log(`El servidor está escuchando en el puerto ${port}`);
+  
+  // Inicializar el sistema de automatización de pagos habituales
+  const { configurarSchedulerMensual, ejecutarProcesamientoAlInicio, crearTablaLogsSiNoExiste } = require('./schedulerPagosHabituales');
+  
+  // Crear tabla de logs si no existe
+  crearTablaLogsSiNoExiste();
+  
+  // Configurar el scheduler mensual
+  configurarSchedulerMensual();
+  
+  // Ejecutar procesamiento al inicio (opcional)
+  setTimeout(() => {
+    ejecutarProcesamientoAlInicio();
+  }, 5000); // Esperar 5 segundos después del inicio del servidor
 });
 

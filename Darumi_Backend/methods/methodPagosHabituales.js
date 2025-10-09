@@ -14,6 +14,31 @@ const gastos = express.Router();
 
 app.use(express.json());
 
+// GET todos los pagos habituales de un usuario por ID
+gastos.get('/pagos-habituales', (req, res) => {
+  const userId = req.query.Id_Usuario; // Get the ID from the query parameters
+
+  console.log(`API call: GET /pagos-habituales, User ID: ${userId}`);
+
+  const query = `SELECT PH.Id_PagoHabitual, PH.Titulo, PH.Monto, PH.Active, PH.InsDateTime, PH.UpdDateTime 
+                 FROM pagos_habituales PH 
+                 JOIN usuarios U ON U.Id_usuario = PH.Id_Usuario 
+                 WHERE U.Identifier_usuario = ? AND PH.Active = 1 
+                 ORDER BY PH.InsDateTime DESC`;
+  console.log(`Executing query: ${query}`);
+
+  connection.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error('Error al ejecutar la consulta MySQL', error);
+      res.status(500).json({ error: 'Error de servidor' });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: 'Pagos habituales no encontrados' });
+    } else {
+      res.json(results); 
+    }
+  });
+});
+
 // POST nuevo pago habitual
 gastos.post('/pagos-habituales', (req, res) => {
     // Obtén los datos del nuevo pago habitual desde el cuerpo de la solicitud

@@ -10,12 +10,17 @@
     ],
     "author": "imano-oh",
     "contributors": [],
+    "scripts": {
+        "start": "node main.js",
+        "test-automatizacion": "node testAutomatizacionPagos.js"
+    },
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.18.2",
         "graphql": "^16.8.1",
         "mssql": "^10.0.2",
         "mysql2": "^3.6.1",
+        "node-cron": "^4.2.1",
         "socket.io": "^4.7.2"
     }
 }
