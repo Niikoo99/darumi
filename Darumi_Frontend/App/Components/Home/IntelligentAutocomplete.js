@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getIconSize
+} from '../../../utils/scaling';
 
 const IntelligentAutocomplete = ({ 
   value, 
@@ -121,7 +130,7 @@ const IntelligentAutocomplete = ({
             <View style={styles.suggestionIcon}>
               <FontAwesome5 
                 name={suggestion.icon} 
-                size={16} 
+                size={getIconSize(16)} 
                 color="white" 
               />
             </View>
@@ -137,7 +146,7 @@ const IntelligentAutocomplete = ({
               onPress={handleSuggestionDismiss}
               style={styles.dismissButton}
             >
-              <FontAwesome5 name="times" size={14} color={Colors.textSecondary} />
+              <FontAwesome5 name="times" size={getIconSize(14)} color={Colors.textSecondary} />
             </TouchableOpacity>
           </TouchableOpacity>
         </Animated.View>
@@ -148,62 +157,55 @@ const IntelligentAutocomplete = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
   },
   input: {
     width: '100%',
-    padding: 16,
-    borderWidth: 2,
+    padding: getSpacing(16),
+    borderWidth: getBorderWidth(2),
     borderColor: Colors.borderLight,
-    borderRadius: 16,
-    fontSize: 16,
+    borderRadius: getBorderRadius(16),
+    fontSize: getBodyFontSize(),
     backgroundColor: Colors.backgroundSecondary,
     color: Colors.textDark,
   },
   suggestionContainer: {
-    marginTop: 8,
+    marginTop: getSpacing(8),
   },
   suggestion: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundCard,
-    borderWidth: 2,
+    borderWidth: getBorderWidth(2),
     borderColor: Colors.border,
-    borderRadius: 12,
-    padding: 12,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: getBorderRadius(12),
+    padding: getSpacing(12),
+    ...getShadowSize(2, 3.84, 0.1),
   },
   suggestionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: getIconSize(32),
+    height: getIconSize(32),
+    borderRadius: getBorderRadius(16),
     backgroundColor: Colors.success,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: getSpacing(12),
   },
   suggestionText: {
     flex: 1,
   },
   suggestionTitle: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
   },
   suggestionSubtitle: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     color: Colors.textSecondary,
   },
   dismissButton: {
-    padding: 8,
+    padding: getSpacing(8),
   },
 });
 

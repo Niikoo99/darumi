@@ -3,6 +3,17 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getIconSize,
+  getMaxWidth
+} from '../../../utils/scaling';
 
 const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction }) => {
   // Mapeo de categorías a iconos y colores
@@ -46,7 +57,7 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
         activeOpacity={0.7}
       >
         <View style={[styles.transactionIcon, { backgroundColor: config.color }]}>
-          <FontAwesome5 name={config.icon} size={20} color="white" />
+          <FontAwesome5 name={config.icon} size={getIconSize(20)} color="white" />
         </View>
         
         <View style={styles.transactionDetails}>
@@ -95,33 +106,26 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 2,
+    borderRadius: getBorderRadius(20),
+    padding: getSpacing(24),
+    marginBottom: getSpacing(20),
+    borderWidth: getBorderWidth(2),
     borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
-    elevation: 8,
+    ...getShadowSize(8, 32, 0.1),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
   },
   title: {
-    fontSize: 18,
+    fontSize: getTitleFontSize(18),
     fontWeight: '600',
     color: Colors.text,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     color: Colors.primary,
     fontWeight: '500',
   },
@@ -131,48 +135,48 @@ const styles = StyleSheet.create({
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: getSpacing(12),
+    paddingHorizontal: getSpacing(16),
     backgroundColor: Colors.backgroundSecondary,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
+    borderRadius: getBorderRadius(12),
+    marginBottom: getSpacing(8),
+    borderWidth: getBorderWidth(),
     borderColor: Colors.borderLight,
   },
   transactionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: getIconSize(48),
+    height: getIconSize(48),
+    borderRadius: getBorderRadius(24),
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: getSpacing(16),
   },
   transactionDetails: {
     flex: 1,
-    marginRight: 12,
+    marginRight: getSpacing(12),
   },
   transactionTitle: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: 4,
+    marginBottom: getSpacing(4),
   },
   transactionMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
   },
   transactionCategory: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     color: Colors.textSecondary,
     fontWeight: '500',
   },
   transactionDate: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     color: Colors.textSecondary,
   },
   transactionDetail: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     color: Colors.textSecondary,
     fontStyle: 'italic',
   },
@@ -180,11 +184,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   amountText: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: '700',
     textAlign: 'right',
     flexWrap: 'wrap',
-    maxWidth: 100,
+    maxWidth: getMaxWidth(100),
   },
   expenseAmount: {
     color: Colors.danger,

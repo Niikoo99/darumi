@@ -1,6 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize 
+} from '../../../utils/scaling';
 
 const FloatingAddButton = ({ onPress, isExpense = true }) => {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
@@ -48,7 +55,7 @@ const FloatingAddButton = ({ onPress, isExpense = true }) => {
       >
         <FontAwesome5 
           name={isExpense ? "minus" : "plus"} 
-          size={24} 
+          size={scaleSize(24)} 
           color="white" 
         />
       </TouchableOpacity>
@@ -65,35 +72,29 @@ const FloatingAddButton = ({ onPress, isExpense = true }) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 30,
-    right: 30,
+    bottom: scaleSize(30),
+    right: scaleSize(30),
     alignItems: 'center',
     zIndex: 1000,
   },
   button: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: scaleSize(64),
+    height: scaleSize(64),
+    borderRadius: scaleSize(32),
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    ...getShadowSize(8, 16, 0.3),
   },
   labelContainer: {
-    marginTop: 8,
+    marginTop: getSpacing(8),
     backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: getSpacing(12),
+    paddingVertical: getSpacing(6),
+    borderRadius: getBorderRadius(12),
   },
   label: {
     color: 'white',
-    fontSize: 12,
+    fontSize: scaleSize(12),
     fontWeight: '600',
   },
 });

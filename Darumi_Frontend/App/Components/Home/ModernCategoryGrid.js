@@ -10,6 +10,18 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getIconSize,
+  getMinWidth,
+  getMinHeight
+} from '../../../utils/scaling';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -172,7 +184,7 @@ const ModernCategoryGrid = ({ categories, selectedCategory, onCategorySelect, is
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
             decelerationRate="fast"
-            snapToInterval={120}
+            snapToInterval={scaleSize(120)}
             snapToAlignment="start"
           >
             {additionalCategories.map((category) => (
@@ -192,73 +204,67 @@ const ModernCategoryGrid = ({ categories, selectedCategory, onCategorySelect, is
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 32,
+    marginBottom: getSpacing(32),
   },
   header: {
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
   },
   title: {
-    fontSize: 18,
+    fontSize: getTitleFontSize(18),
     fontWeight: '700',
     color: Colors.text,
-    marginBottom: 4,
+    marginBottom: getSpacing(4),
   },
   mainGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
   },
   categoryItem: {
     width: '30%',
-    marginBottom: 16,
+    marginBottom: getSpacing(16),
   },
   categoryItemHorizontal: {
-    marginRight: 12,
-    minWidth: 100,
+    marginRight: getSpacing(12),
+    minWidth: getMinWidth(100),
   },
   categoryButton: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: getBorderRadius(16),
+    padding: getSpacing(20),
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    minHeight: 100,
+    ...getShadowSize(4, 8, 0.1),
+    minHeight: getMinHeight(100),
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: getIconSize(48),
+    height: getIconSize(48),
+    borderRadius: getBorderRadius(24),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: getSpacing(12),
   },
   emojiIcon: {
-    fontSize: 24,
+    fontSize: scaleSize(24),
   },
   categoryName: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: scaleSize(14),
   },
   additionalSection: {
-    marginTop: 8,
+    marginTop: getSpacing(8),
   },
   additionalTitle: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: '600',
     color: Colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: getSpacing(12),
   },
   horizontalScroll: {
-    paddingRight: 24,
+    paddingRight: getSpacing(24),
   },
 });
 

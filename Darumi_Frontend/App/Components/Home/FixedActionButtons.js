@@ -8,6 +8,16 @@ import {
   Dimensions 
 } from 'react-native';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getGap,
+  getIconSize
+} from '../../../utils/scaling';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -155,9 +165,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 32,
+    paddingHorizontal: getSpacing(24),
+    paddingTop: getSpacing(20),
+    paddingBottom: getSpacing(32),
     zIndex: 100,
   },
   gradientBackground: {
@@ -171,45 +181,32 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     flexDirection: 'row',
-    gap: 16,
+    gap: getGap(16),
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 16,
+    paddingVertical: getSpacing(18),
+    paddingHorizontal: getSpacing(24),
+    borderRadius: getBorderRadius(16),
     backgroundColor: Colors.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: getBorderWidth(2),
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    ...getShadowSize(2, 4, 0.1),
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.7)',
   },
   saveButton: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: getBorderRadius(16),
     shadowColor: Colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    ...getShadowSize(4, 8, 0.3),
+    paddingVertical: getSpacing(18),
+    paddingHorizontal: getSpacing(24),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -218,25 +215,25 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   saveButtonText: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: getGap(8),
   },
   loadingSpinner: {
-    width: 16,
-    height: 16,
-    borderWidth: 2,
+    width: getIconSize(16),
+    height: getIconSize(16),
+    borderWidth: getBorderWidth(2),
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderTopColor: Colors.white,
-    borderRadius: 8,
+    borderRadius: getBorderRadius(8),
     // La animación se manejará con Animated.loop en el componente padre
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.white,
   },

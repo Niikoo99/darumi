@@ -8,12 +8,21 @@ import Achievement from '../Screens/Achievement'
 import UsualPayment from '../Screens/UsualPayment'
 import Settings from '../Screens/Settings'
 import Colors from '../../assets/shared/Colors'
+import { 
+  scaleSize, 
+  getTabBarSize, 
+  getIconSize, 
+  getSpacing, 
+  getBorderRadius, 
+  getShadowSize, 
+  getBorderWidth 
+} from '../../utils/scaling'
 
 const Tab = createBottomTabNavigator()
 
 const screenOptions = (route, color, focused) => {
   let iconName
-  let iconSize = focused ? 24 : 20
+  let iconSize = focused ? getIconSize(24) : getIconSize(20)
   
   switch (route.name) {
       case "Home":
@@ -55,28 +64,19 @@ export default function TabNavigation() {
         tabBarStyle: {
           backgroundColor: Colors.backgroundSecondary,
           borderTopColor: Colors.border,
-          borderTopWidth: 2,
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 10,
-          shadowColor: Colors.shadow,
-          shadowOffset: {
-            width: 0,
-            height: -4,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
+          borderTopWidth: getBorderWidth(),
+          ...getTabBarSize(),
+          ...getShadowSize(4, 8, 0.1),
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: scaleSize(12),
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: getSpacing(4),
         },
         tabBarItemStyle: {
-          borderRadius: 12,
-          marginHorizontal: 4,
-          marginVertical: 4,
+          borderRadius: getBorderRadius(12),
+          marginHorizontal: getSpacing(4),
+          marginVertical: getSpacing(4),
         },
       })}
     >
@@ -92,7 +92,7 @@ export default function TabNavigation() {
             ]}>
               <FontAwesome5
                 name="home"
-                size={focused ? 24 : 20}
+                size={focused ? getIconSize(24) : getIconSize(20)}
                 color={focused ? Colors.textDark : color}
                 solid={focused}
               />
@@ -112,7 +112,7 @@ export default function TabNavigation() {
             ]}>
               <FontAwesome5
                 name="credit-card"
-                size={focused ? 24 : 20}
+                size={focused ? getIconSize(24) : getIconSize(20)}
                 color={focused ? Colors.textDark : color}
                 solid={focused}
               />
@@ -132,7 +132,7 @@ export default function TabNavigation() {
             ]}>
               <FontAwesome5
                 name="trophy"
-                size={focused ? 24 : 20}
+                size={focused ? getIconSize(24) : getIconSize(20)}
                 color={focused ? Colors.textDark : color}
                 solid={focused}
               />
@@ -152,7 +152,7 @@ export default function TabNavigation() {
             ]}>
               <FontAwesome5
                 name="folder"
-                size={focused ? 24 : 20}
+                size={focused ? getIconSize(24) : getIconSize(20)}
                 color={focused ? Colors.textDark : color}
                 solid={focused}
               />
@@ -172,7 +172,7 @@ export default function TabNavigation() {
             ]}>
               <FontAwesome5
                 name="cog"
-                size={focused ? 24 : 20}
+                size={focused ? getIconSize(24) : getIconSize(20)}
                 color={focused ? Colors.textDark : color}
                 solid={focused}
               />
@@ -186,9 +186,9 @@ export default function TabNavigation() {
 
 const styles = StyleSheet.create({
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: scaleSize(20),
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
@@ -196,12 +196,6 @@ const styles = StyleSheet.create({
   activeIconContainer: {
     backgroundColor: Colors.primary,
     shadowColor: Colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    ...getShadowSize(2, 4, 0.3),
   },
 })

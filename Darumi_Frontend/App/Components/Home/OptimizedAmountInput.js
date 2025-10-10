@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getMinWidth
+} from '../../../utils/scaling';
 
 const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -156,49 +166,43 @@ const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" 
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 32,
+    marginBottom: getSpacing(32),
   },
   header: {
-    marginBottom: 16,
+    marginBottom: getSpacing(16),
   },
   title: {
-    fontSize: 18,
+    fontSize: getTitleFontSize(18),
     fontWeight: '700',
     color: Colors.text,
   },
   inputContainer: {
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 2,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    borderRadius: getBorderRadius(20),
+    padding: getSpacing(24),
+    borderWidth: getBorderWidth(2),
+    ...getShadowSize(4, 8, 0.1),
     alignItems: 'center',
   },
   amountDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: getSpacing(16),
   },
   currencySymbol: {
-    fontSize: 32,
+    fontSize: scaleSize(32),
     fontWeight: '700',
-    marginRight: 12,
+    marginRight: getSpacing(12),
   },
   amountInput: {
-    fontSize: 32,
+    fontSize: scaleSize(32),
     fontWeight: '700',
     textAlign: 'center',
     paddingVertical: 0,
-    minWidth: 150,
+    minWidth: getMinWidth(150),
   },
   hintText: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     color: 'rgba(255, 255, 255, 0.6)',
     fontStyle: 'italic',
     textAlign: 'center',

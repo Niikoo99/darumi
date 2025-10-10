@@ -8,6 +8,17 @@ import { buildApiUrl, getEndpoints } from '../../../config/api';
 import app from './../../../assets/images/darumi.png';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { formatCurrency } from '../../../utils/formatting';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getIconSize,
+  getMaxWidth
+} from '../../../utils/scaling';
 
 export default function MonthInfo({ onEditItem }) {
   const capitalizeFirstLetter = (string) => {
@@ -334,7 +345,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: getSpacing(10),
     backgroundColor: '#f5f5f5',
     width: '95%',
   },
@@ -343,49 +354,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 10,
+    marginBottom: getSpacing(10),
   },
   searchInput: {
     flex: 1,
-    height: 40,
-    borderWidth: 1,
+    height: scaleSize(40),
+    borderWidth: getBorderWidth(),
     borderColor: '#ccc',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginRight: 10,
+    borderRadius: getBorderRadius(5),
+    paddingHorizontal: getSpacing(10),
+    marginRight: getSpacing(10),
   },
   monthPicker: {
-    height: 40,
+    height: scaleSize(40),
     width: '40%',
     borderColor: '#007bff',
-    borderWidth: 1,
-    paddingHorizontal: 10,
+    borderWidth: getBorderWidth(),
+    paddingHorizontal: getSpacing(10),
     color: 'black',
   },
   flatList: {    
-    marginTop: 10,
+    marginTop: getSpacing(10),
     width: '100%', // Adjusted to take up the full width
     maxHeight: '75%', // Adjusted to set maximum height
   },  
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 10, // Optional: Add horizontal padding
-    paddingVertical: 5, // Optional: Add vertical padding
-    borderWidth: 2, // Add a thin border
+    marginBottom: getSpacing(10),
+    paddingHorizontal: getSpacing(10), // Optional: Add horizontal padding
+    paddingVertical: getSpacing(5), // Optional: Add vertical padding
+    borderWidth: getBorderWidth(2), // Add a thin border
     borderColor: Colors.lightGray, // Set the border color
-    borderRadius: 5, // Optional: Add border radius for rounded corners
+    borderRadius: getBorderRadius(5), // Optional: Add border radius for rounded corners
   },
   appImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: scaleSize(50),
+    height: scaleSize(50),
+    borderRadius: getBorderRadius(25),
+    marginRight: getSpacing(10),
   },
   itemDetails: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: getSpacing(10),
   },
   itemRow: {
     flexDirection: 'row',
@@ -396,48 +407,48 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   itemTitle: {
-    fontSize: 18,
+    fontSize: getTitleFontSize(18),
     fontWeight: 'bold',
   },
   itemDetail: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
   },
   itemDate: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: 'semibold',
     color: '#000',
   },
   itemAmount: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: 'bold',
     textAlign: 'right',
     flexWrap: 'wrap',
-    maxWidth: 80,
+    maxWidth: getMaxWidth(80),
   },
   refreshIconContainer: {
     alignSelf: 'center', // Center the refresh icon vertically
   },
   refreshButton: {
-    padding: 10, // Add padding to make the button clickable
+    padding: getSpacing(10), // Add padding to make the button clickable
   },
   refreshIcon: {
-    width: 24,
-    height: 24,
+    width: getIconSize(24),
+    height: getIconSize(24),
     resizeMode: 'contain', // Ensure the icon fits within the TouchableOpacity
-    padding: 10,
+    padding: getSpacing(10),
     backgroundColor: Colors.primary, // Change the button background color
-    borderRadius: 5, // Optional: Add border radius for rounded corners
+    borderRadius: getBorderRadius(5), // Optional: Add border radius for rounded corners
   },
   iconContainer: {
-    width: 50, // Adjust the width to fit the icon size
+    width: scaleSize(50), // Adjust the width to fit the icon size
     alignItems: 'center',
-    marginRight: 15,
-    padding: 10,
+    marginRight: getSpacing(15),
+    padding: getSpacing(10),
     backgroundColor: Colors.primary, // Change the button background color
-    borderRadius: 5, // Optional: Add border radius for rounded corners
+    borderRadius: getBorderRadius(5), // Optional: Add border radius for rounded corners
   },
   icon: {
-    height: 24, // Set the height of the icon    
+    height: getIconSize(24), // Set the height of the icon    
   },
   positiveAmount: {
     color: 'green',
@@ -446,20 +457,20 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   toggleButton: {
-    marginBottom: 10,
+    marginBottom: getSpacing(10),
   },
   positiveAmountTotal: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
     color: 'green',
     textAlign: 'center',
     flexWrap: 'wrap',
   },
   negativeAmountTotal: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
     color: 'red',
     textAlign: 'center',
     flexWrap: 'wrap',
@@ -468,16 +479,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: getSpacing(10),
     width: '100%',
   },
   totalColumn: {
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
   },
   selectedItem: {
     backgroundColor: '#e0e0e0',

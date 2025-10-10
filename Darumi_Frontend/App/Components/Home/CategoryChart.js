@@ -3,6 +3,17 @@ import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getGap,
+  getIconSize
+} from '../../../utils/scaling';
 
 const CategoryChart = ({ categories = [] }) => {
   // Mapeo de categorías a iconos y colores
@@ -35,7 +46,7 @@ const CategoryChart = ({ categories = [] }) => {
           return (
             <View key={category.id || index} style={styles.chartItem}>
               <View style={[styles.chartIcon, { backgroundColor: config.color }]}>
-                <FontAwesome5 name={config.icon} size={16} color="white" />
+                <FontAwesome5 name={config.icon} size={getIconSize(16)} color="white" />
               </View>
               
               <View style={styles.chartInfo}>
@@ -60,7 +71,7 @@ const CategoryChart = ({ categories = [] }) => {
         
         {topCategories.length === 0 && (
           <View style={styles.emptyState}>
-            <FontAwesome5 name="chart-bar" size={32} color={Colors.textSecondary} />
+            <FontAwesome5 name="chart-bar" size={getIconSize(32)} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>No hay datos para mostrar</Text>
           </View>
         )}
@@ -72,38 +83,31 @@ const CategoryChart = ({ categories = [] }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 2,
+    borderRadius: getBorderRadius(20),
+    padding: getSpacing(24),
+    marginBottom: getSpacing(20),
+    borderWidth: getBorderWidth(2),
     borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
-    elevation: 8,
+    ...getShadowSize(8, 32, 0.1),
   },
   title: {
-    fontSize: 18,
+    fontSize: getTitleFontSize(18),
     fontWeight: '600',
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
     color: Colors.text,
   },
   chartContainer: {
-    gap: 12,
+    gap: getGap(12),
   },
   chartItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: getGap(12),
   },
   chartIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: getIconSize(40),
+    height: getIconSize(40),
+    borderRadius: getBorderRadius(20),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -111,36 +115,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chartCategory: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: 2,
+    marginBottom: getSpacing(2),
   },
   chartAmount: {
-    fontSize: 11,
+    fontSize: scaleSize(11),
     color: Colors.textSecondary,
     fontWeight: '500',
     flexWrap: 'wrap',
   },
   chartBar: {
-    height: 8,
+    height: scaleSize(8),
     backgroundColor: Colors.borderLight,
-    borderRadius: 4,
+    borderRadius: getBorderRadius(4),
     overflow: 'hidden',
-    width: 80,
+    width: scaleSize(80),
   },
   chartBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: getBorderRadius(4),
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: getSpacing(40),
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     color: Colors.textSecondary,
-    marginTop: 8,
+    marginTop: getSpacing(8),
   },
 });
 

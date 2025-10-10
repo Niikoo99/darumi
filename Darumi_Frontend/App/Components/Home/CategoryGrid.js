@@ -2,6 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth,
+  getIconSize
+} from '../../../utils/scaling';
 
 const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpense }) => {
   // Mapeo de categorías a iconos
@@ -64,7 +73,7 @@ const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpens
               ]}>
                 <FontAwesome5 
                   name={iconName} 
-                  size={16} 
+                  size={getIconSize(16)} 
                   color={colors.iconColor} 
                 />
               </View>
@@ -84,13 +93,13 @@ const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpens
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: getSpacing(24),
   },
   title: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: 16,
+    marginBottom: getSpacing(16),
   },
   grid: {
     flexDirection: 'row',
@@ -100,33 +109,26 @@ const styles = StyleSheet.create({
   categoryItem: {
     width: '23%',
     aspectRatio: 1,
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: getBorderRadius(16),
+    padding: getSpacing(12),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: getSpacing(12),
+    ...getShadowSize(2, 3.84, 0.1),
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: getIconSize(32),
+    height: getIconSize(32),
+    borderRadius: getBorderRadius(16),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: getSpacing(8),
   },
   categoryName: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     fontWeight: '500',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: scaleSize(14),
   },
 });
 

@@ -3,6 +3,15 @@ import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getTitleFontSize,
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize,
+  getBorderWidth
+} from '../../../utils/scaling';
 
 const BalanceProgressCard = ({ 
   balance, 
@@ -66,74 +75,67 @@ const BalanceProgressCard = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 2,
+    borderRadius: getBorderRadius(20),
+    padding: getSpacing(24),
+    marginBottom: getSpacing(20),
+    borderWidth: getBorderWidth(2),
     borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
-    elevation: 8,
+    ...getShadowSize(8, 32, 0.1),
   },
   header: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: getSpacing(20),
   },
   title: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     color: Colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: getSpacing(8),
     fontWeight: '500',
   },
   balanceAmount: {
-    fontSize: 24,
+    fontSize: getTitleFontSize(24),
     fontWeight: '700',
     color: Colors.text,
     textAlign: 'center',
     flexWrap: 'wrap',
   },
   progressSection: {
-    marginTop: 8,
+    marginTop: getSpacing(8),
   },
   progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: getSpacing(8),
   },
   progressLabel: {
-    fontSize: 14,
+    fontSize: scaleSize(14),
     color: Colors.textSecondary,
     fontWeight: '500',
   },
   progressValue: {
-    fontSize: 12,
+    fontSize: scaleSize(12),
     color: Colors.textSecondary,
     fontWeight: '600',
     textAlign: 'right',
     flexWrap: 'wrap',
   },
   progressBarContainer: {
-    marginBottom: 8,
+    marginBottom: getSpacing(8),
   },
   progressBar: {
-    height: 12,
+    height: scaleSize(12),
     backgroundColor: Colors.borderLight,
-    borderRadius: 6,
+    borderRadius: getBorderRadius(6),
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 6,
+    borderRadius: getBorderRadius(6),
     transition: 'width 0.3s ease',
   },
   remainingText: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: scaleSize(12),
     color: Colors.textSecondary,
     fontWeight: '500',
     flexWrap: 'wrap',

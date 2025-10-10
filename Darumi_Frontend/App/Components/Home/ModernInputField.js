@@ -7,6 +7,16 @@ import {
   Animated 
 } from 'react-native';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getSmallFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize, 
+  getBorderWidth, 
+  getGap 
+} from '../../../utils/scaling';
 
 const ModernInputField = ({ 
   label, 
@@ -125,43 +135,37 @@ const ModernInputField = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: getSpacing(24),
   },
   labelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
+    marginBottom: getSpacing(8),
+    gap: getGap(8),
   },
   label: {
-    fontSize: 14,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.8)',
   },
   optionalLabel: {
-    fontSize: 12,
+    fontSize: getSmallFontSize(),
     color: 'rgba(255, 255, 255, 0.6)',
     fontStyle: 'italic',
   },
   inputContainer: {
-    borderRadius: 16,
-    borderWidth: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowRadius: 4,
-    elevation: 4,
+    borderRadius: getBorderRadius(),
+    borderWidth: getBorderWidth(),
+    ...getShadowSize(2, 4),
   },
   input: {
-    padding: 18,
-    fontSize: 16,
+    padding: getSpacing(18),
+    fontSize: getBodyFontSize(),
     color: Colors.text,
     fontFamily: 'System',
   },
   multilineInput: {
-    minHeight: 80,
+    minHeight: scaleSize(80),
     textAlignVertical: 'top',
   },
 });

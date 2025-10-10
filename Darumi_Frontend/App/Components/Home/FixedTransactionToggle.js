@@ -1,6 +1,15 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import Colors from '../../../assets/shared/Colors';
+import { 
+  scaleSize, 
+  getBodyFontSize, 
+  getBorderRadius, 
+  getSpacing, 
+  getShadowSize, 
+  getBorderWidth, 
+  getGap 
+} from '../../../utils/scaling';
 
 const FixedTransactionToggle = ({ isExpense, onToggle }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -67,19 +76,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: Colors.backgroundSecondary,
-    borderRadius: 20,
-    padding: 6,
-    marginBottom: 32,
-    borderWidth: 2,
+    borderRadius: getBorderRadius(20),
+    padding: getSpacing(6),
+    marginBottom: getSpacing(32),
+    borderWidth: getBorderWidth(2),
     borderColor: 'rgba(255, 233, 0, 0.3)',
-    shadowColor: Colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    ...getShadowSize(4, 8, 0.2),
     position: 'relative',
   },
   toggleOption: {
@@ -87,34 +89,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    gap: 12,
+    paddingVertical: getSpacing(16),
+    paddingHorizontal: getSpacing(20),
+    borderRadius: getBorderRadius(16),
+    gap: getGap(12),
     zIndex: 1,
   },
   leftOption: {
-    marginRight: 3,
+    marginRight: getSpacing(3),
   },
   rightOption: {
-    marginLeft: 3,
+    marginLeft: getSpacing(3),
   },
   activeOption: {
     backgroundColor: Colors.primary,
     shadowColor: Colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...getShadowSize(2, 4, 0.3),
   },
   toggleIcon: {
-    fontSize: 20,
+    fontSize: scaleSize(20),
   },
   toggleText: {
-    fontSize: 16,
+    fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.text,
   },
