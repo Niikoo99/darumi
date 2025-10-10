@@ -9,8 +9,10 @@ const BalanceProgressCard = ({
   spentMoney, 
   currency = '$' 
 }) => {
-  const percentage = availableMoney > 0 ? (spentMoney / availableMoney) * 100 : 0;
-  const remainingMoney = availableMoney - spentMoney;
+  // El dinero disponible es la suma de ingresos
+  const effectiveAvailableMoney = availableMoney;
+  const percentage = effectiveAvailableMoney > 0 ? (spentMoney / effectiveAvailableMoney) * 100 : 0;
+  const remainingMoney = effectiveAvailableMoney - spentMoney;
   
   const getBalanceColor = () => {
     if (balance >= 0) return Colors.success;
@@ -35,7 +37,7 @@ const BalanceProgressCard = ({
       <View style={styles.progressSection}>
         <View style={styles.progressLabels}>
           <Text style={styles.progressLabel}>Dinero Disponible</Text>
-          <Text style={styles.progressValue}>{currency}{availableMoney.toFixed(2)}</Text>
+          <Text style={styles.progressValue}>{currency}{effectiveAvailableMoney.toFixed(2)}</Text>
         </View>
         
         <View style={styles.progressBarContainer}>

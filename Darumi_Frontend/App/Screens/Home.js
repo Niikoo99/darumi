@@ -3,9 +3,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
 import CategoryGrid from '../Components/Home/CategoryGrid';
+import ModernCategoryGrid from '../Components/Home/ModernCategoryGrid';
 import TransactionTypeToggle from '../Components/Home/TransactionTypeToggle';
+import SimpleTransactionToggle from '../Components/Home/SimpleTransactionToggle';
+import FixedTransactionToggle from '../Components/Home/FixedTransactionToggle';
 import OptimizedAmountInput from '../Components/Home/OptimizedAmountInput';
 import IntelligentAutocomplete from '../Components/Home/IntelligentAutocomplete';
+import ModernInputField from '../Components/Home/ModernInputField';
+import ScrollableTransactionForm from '../Components/Home/ScrollableTransactionForm';
+import FixedActionButtons from '../Components/Home/FixedActionButtons';
+import SimpleFixedActionButtons from '../Components/Home/SimpleFixedActionButtons';
 import BalanceProgressCard from '../Components/Home/BalanceProgressCard';
 import CategoryChart from '../Components/Home/CategoryChart';
 import FinancialSummaryCards from '../Components/Home/FinancialSummaryCards';
@@ -40,13 +47,15 @@ export default function Home() {
   const [editedDetail, setEditedDetail] = useState('');
   const [editedAmount, setEditedAmount] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   
   // Estados para el dashboard
   const [financialData, setFinancialData] = useState({
     totalExpenses: 0,
     totalIncome: 0,
     balance: 0,
-    availableMoney: 3500, // Monto fijo disponible por el usuario
+    availableMoney: 0, // Se calculará dinámicamente basado en el balance
   });
   const [categoryData, setCategoryData] = useState([]);
   
@@ -129,7 +138,7 @@ export default function Home() {
             totalExpenses,
             totalIncome,
             balance,
-            availableMoney: 3500, // Monto fijo disponible
+            availableMoney: totalIncome, // Dinero disponible basado en los ingresos totales
           });
 
           // Calculate category data
@@ -176,42 +185,67 @@ export default function Home() {
     });
   }, [isSignedIn, user]);
 
-  const handleGuardar = () => {
-    const Monto_gasto = isExpensesSelected ? -valor_Monto : valor_Monto;
-    const auxIdCategory = isExpensesSelected ? categoriaSeleccionada : categoriaIngresos;
+  const handleGuardar = async () => {
+    // Validación del formulario
+    const errors = {};
+    
+    if (!valor_Titulo.trim()) {
+      errors.title = 'Por favor ingresa un título para la transacción';
+    }
+    
+    if (!valor_Monto || isNaN(valor_Monto) || parseFloat(valor_Monto) <= 0) {
+      errors.amount = 'Por favor ingresa un monto válido';
+    }
+    
+    if (isExpensesSelected && !categoriaSeleccionada) {
+      errors.category = 'Por favor selecciona una categoría para el gasto';
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    setFormErrors({});
+    setIsSaving(true);
+    
+    try {
+      const Monto_gasto = isExpensesSelected ? -valor_Monto : valor_Monto;
+      const auxIdCategory = isExpensesSelected ? categoriaSeleccionada : categoriaIngresos;
 
-    console.log('Request Params:', {
-      Monto_gasto,
-      Id_categoria: auxIdCategory,
-      Titulo_gasto: valor_Titulo,
-      Detalle_gasto: valor_Detalle,
-      Id_usuario: user.id,
-    });
-
-    axios
-      .post(buildApiUrl(getEndpoints().GASTOS), {
+      console.log('Request Params:', {
         Monto_gasto,
         Id_categoria: auxIdCategory,
         Titulo_gasto: valor_Titulo,
         Detalle_gasto: valor_Detalle,
         Id_usuario: user.id,
-      })
-      .then((response) => {
-        console.log('Gasto guardado:', response.data);
-        setValorMonto('');
-        setValorDetalle('');
-        setValorTitulo('');
-        setCategoriaSeleccionada('');
-        setModalVisible(false);
-        
-        // Refresh data after saving
-        fetchData();
-      })
-      .catch((error) => {
-        console.error(error);
       });
 
-    console.log('Handle guardar called');
+      const response = await axios.post(buildApiUrl(getEndpoints().GASTOS), {
+        Monto_gasto,
+        Id_categoria: auxIdCategory,
+        Titulo_gasto: valor_Titulo,
+        Detalle_gasto: valor_Detalle,
+        Id_usuario: user.id,
+      });
+
+      console.log('Gasto guardado:', response.data);
+      
+      // Limpiar formulario
+      setValorMonto('');
+      setValorDetalle('');
+      setValorTitulo('');
+      setCategoriaSeleccionada('');
+      setModalVisible(false);
+      
+      // Refresh data after saving
+      await fetchData();
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      setFormErrors({ general: 'Error al guardar la transacción. Inténtalo de nuevo.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Función para refrescar datos (extraída del useEffect)
@@ -259,7 +293,7 @@ export default function Home() {
           totalExpenses,
           totalIncome,
           balance,
-          availableMoney: 3500, // Monto fijo disponible
+          availableMoney: totalIncome, // Dinero disponible basado en los ingresos totales
         });
 
         // Calculate category data
@@ -336,6 +370,8 @@ export default function Home() {
       setValorDetalle('');
       setValorMonto('');
       setCategoriaSeleccionada('');
+      setFormErrors({});
+      setIsSaving(false);
     });
   };
 
@@ -523,108 +559,94 @@ export default function Home() {
         isExpense={isExpensesSelected}
       />
       
-      {/* Modal Principal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+      {/* Modal Principal Rediseñado */}
+      <ScrollableTransactionForm
+        isVisible={modalVisible}
+        onClose={closeModal}
+        title={isExpensesSelected ? '💸 Nuevo Gasto' : '💰 Nuevo Ingreso'}
+        subtitle="Registra tu transacción rápidamente"
       >
-        <View style={styles.modalBackground}>
-          <Animated.View 
-            style={[
-              styles.modalContainer,
-              {
-                transform: [{
-                  translateY: modalAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [100, 0],
-                  }),
-                }],
-                opacity: modalAnimation,
-              }
-            ]}
+        {/* Toggle Gastos/Ingresos */}
+        <FixedTransactionToggle 
+          isExpense={isExpensesSelected}
+          onToggle={handleToggleSwitch}
+        />
+
+        {/* Campo de título */}
+        <ModernInputField
+          label="¿En qué gastaste?"
+          placeholder={isExpensesSelected ? "Ej: Supermercado, Uber, Gasolina..." : "Ej: Salario, Venta, Freelance..."}
+          value={valor_Titulo}
+          onChangeText={setValorTitulo}
+          keyboardType="default"
+        />
+
+        {/* Campo de detalle */}
+        <ModernInputField
+          label="Detalle adicional"
+          placeholder="Agrega más detalles sobre esta transacción..."
+          value={valor_Detalle}
+          onChangeText={setValorDetalle}
+          multiline={true}
+          numberOfLines={3}
+          isOptional={true}
+        />
+
+        {/* Grilla de categorías moderna */}
+        {isExpensesSelected && (
+          <ModernCategoryGrid
+            categories={filteredData}
+            selectedCategory={categoriaSeleccionada}
+            onCategorySelect={handleCategorySelect}
+            isExpense={true}
+          />
+        )}
+
+        {/* Campo de monto premium */}
+        <OptimizedAmountInput
+          value={valor_Monto}
+          onChangeText={setValorMonto}
+          isExpense={isExpensesSelected}
+          placeholder="0"
+        />
+
+        {/* Mensajes de error */}
+        {Object.keys(formErrors).length > 0 && (
+          <View style={styles.errorContainer}>
+            {Object.values(formErrors).map((error, index) => (
+              <Text key={index} style={styles.errorText}>
+                {error}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Botones de acción */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.cancelButton} 
+            onPress={closeModal}
+            activeOpacity={0.7}
           >
-            {/* Indicador superior */}
-            <View style={styles.modalIndicator} />
-            
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {isExpensesSelected ? '💸 Nuevo Gasto' : '💰 Nuevo Ingreso'}
-              </Text>
-              <Text style={styles.modalSubtitle}>
-                Registra tu transacción rápidamente
-              </Text>
-            </View>
-
-            {/* Toggle Gastos/Ingresos */}
-            <TransactionTypeToggle 
-              isExpense={isExpensesSelected}
-              onToggle={handleToggleSwitch}
-            />
-
-            {/* Campo de título con autocompletado */}
-            <IntelligentAutocomplete
-              value={valor_Titulo}
-              onChangeText={setValorTitulo}
-              placeholder={isExpensesSelected ? "¿En qué gastaste?" : "¿De dónde viene este ingreso?"}
-              categories={data}
-              onSuggestionAccept={handleSuggestionAccept}
-            />
-
-            {/* Campo de detalle */}
-            <TextInput
-              style={styles.detailInput}
-              placeholder="Detalle adicional (opcional)"
-              value={valor_Detalle}
-              onChangeText={setValorDetalle}
-              placeholderTextColor={Colors.textSecondary}
-              multiline
-              numberOfLines={2}
-            />
-
-            {/* Grilla de categorías */}
-            {isExpensesSelected && (
-              <CategoryGrid
-                categories={filteredData}
-                selectedCategory={categoriaSeleccionada}
-                onCategorySelect={handleCategorySelect}
-                isExpense={true}
-              />
-            )}
-
-            {/* Campo de monto optimizado */}
-            <OptimizedAmountInput
-              value={valor_Monto}
-              onChangeText={setValorMonto}
-              isExpense={isExpensesSelected}
-              placeholder="0"
-            />
-
-            {/* Botones de acción */}
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={styles.cancelButton} 
-                onPress={closeModal}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[
-                  styles.saveButton,
-                  isExpensesSelected ? styles.expenseButton : styles.incomeButton
-                ]} 
-                onPress={handleGuardar}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.saveButtonText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[
+              styles.saveButton,
+              (isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)) 
+                ? styles.disabledButton 
+                : (isExpensesSelected ? styles.expenseButton : styles.incomeButton)
+            ]} 
+            onPress={handleGuardar}
+            activeOpacity={0.7}
+            disabled={isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)}
+          >
+            <Text style={styles.saveButtonText}>
+              {isSaving ? 'Guardando...' : (isExpensesSelected ? 'Guardar Gasto' : 'Guardar Ingreso')}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </ScrollableTransactionForm>
 
       {/* Modal de Edición */}
       <Modal
@@ -938,5 +960,85 @@ const styles = StyleSheet.create({
     color: Colors.text,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+    borderWidth: 1,
+    borderColor: Colors.danger,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: Colors.danger,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  saveButton: {
+    flex: 1,
+    borderRadius: 16,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+  },
+  expenseButton: {
+    backgroundColor: Colors.danger,
+    shadowColor: Colors.danger,
+  },
+  incomeButton: {
+    backgroundColor: Colors.success,
+    shadowColor: Colors.success,
+  },
+  disabledButton: {
+    backgroundColor: '#666',
+    shadowOpacity: 0.1,
+    elevation: 2,
+    shadowColor: '#666',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
   },
 });

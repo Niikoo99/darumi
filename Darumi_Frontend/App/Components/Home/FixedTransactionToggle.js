@@ -1,9 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 
-const TransactionTypeToggle = ({ isExpense, onToggle }) => {
+const FixedTransactionToggle = ({ isExpense, onToggle }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePress = (expense) => {
@@ -25,19 +24,10 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      {/* Indicador deslizante simplificado */}
-      <View 
-        style={[
-          styles.slider,
-          {
-            left: isExpense ? 6 : '50%',
-          }
-        ]} 
-      />
-      
       <TouchableOpacity
         style={[
           styles.toggleOption,
+          styles.leftOption,
           isExpense && styles.activeOption
         ]}
         onPress={() => handlePress(true)}
@@ -55,6 +45,7 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
       <TouchableOpacity
         style={[
           styles.toggleOption,
+          styles.rightOption,
           !isExpense && styles.activeOption
         ]}
         onPress={() => handlePress(false)}
@@ -91,23 +82,6 @@ const styles = StyleSheet.create({
     elevation: 8,
     position: 'relative',
   },
-  slider: {
-    position: 'absolute',
-    top: 6,
-    bottom: 6,
-    width: '50%',
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    shadowColor: Colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    transition: 'left 0.3s ease',
-  },
   toggleOption: {
     flex: 1,
     flexDirection: 'row',
@@ -119,8 +93,22 @@ const styles = StyleSheet.create({
     gap: 12,
     zIndex: 1,
   },
+  leftOption: {
+    marginRight: 3,
+  },
+  rightOption: {
+    marginLeft: 3,
+  },
   activeOption: {
-    // El fondo activo se maneja con el slider
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   toggleIcon: {
     fontSize: 20,
@@ -136,4 +124,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TransactionTypeToggle;
+export default FixedTransactionToggle;

@@ -1,9 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 
-const TransactionTypeToggle = ({ isExpense, onToggle }) => {
+const SimpleTransactionToggle = ({ isExpense, onToggle }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePress = (expense) => {
@@ -25,12 +24,12 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      {/* Indicador deslizante simplificado */}
+      {/* Indicador de fondo */}
       <View 
         style={[
-          styles.slider,
+          styles.backgroundIndicator,
           {
-            left: isExpense ? 6 : '50%',
+            backgroundColor: isExpense ? Colors.danger : Colors.success,
           }
         ]} 
       />
@@ -91,12 +90,12 @@ const styles = StyleSheet.create({
     elevation: 8,
     position: 'relative',
   },
-  slider: {
+  backgroundIndicator: {
     position: 'absolute',
     top: 6,
+    left: 6,
     bottom: 6,
     width: '50%',
-    backgroundColor: Colors.primary,
     borderRadius: 16,
     shadowColor: Colors.primary,
     shadowOffset: {
@@ -106,7 +105,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    transition: 'left 0.3s ease',
   },
   toggleOption: {
     flex: 1,
@@ -120,7 +118,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   activeOption: {
-    // El fondo activo se maneja con el slider
+    // El fondo activo se maneja con el backgroundIndicator
   },
   toggleIcon: {
     fontSize: 20,
@@ -132,8 +130,8 @@ const styles = StyleSheet.create({
   },
   activeText: {
     fontWeight: '700',
-    color: Colors.textDark,
+    color: Colors.white,
   },
 });
 
-export default TransactionTypeToggle;
+export default SimpleTransactionToggle;
