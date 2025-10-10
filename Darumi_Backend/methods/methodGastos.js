@@ -9,6 +9,8 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const connection = require('../db');
+const { generarObjetivosPorDefecto, necesitaObjetivosPorDefecto, obtenerDineroDisponible } = require('../services/defaultObjectivesGenerator');
+const { verificarObjetivosCompletados } = require('../services/realTimeObjectiveChecker');
 
 const gastos = express.Router();
 
@@ -99,14 +101,61 @@ gastos.post('/gastos', (req, res) => {
   // Realiza la inserción en la base de datos
   connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
     if (error) throw error;
-      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, ?, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria], (error, results, fields) => {
+      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, ?, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria], async (error, results, fields) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });
         } else {
+          // Verificar si es un ingreso y si el usuario necesita objetivos por defecto
+          if (Monto_gasto > 0) {
+            try {
+              console.log(`💰 Ingreso registrado: $${Monto_gasto} para usuario ${Id_usuario}`);
+              
+              // Verificar si el usuario necesita objetivos por defecto
+              const necesitaObjetivos = await necesitaObjetivosPorDefecto(Id_usuario);
+              
+              if (necesitaObjetivos) {
+                console.log(`🎯 Usuario ${Id_usuario} necesita objetivos por defecto`);
+                
+                // Obtener dinero disponible actualizado
+                const dineroDisponible = await obtenerDineroDisponible(Id_usuario);
+                
+                if (dineroDisponible > 0) {
+                  // Generar objetivos por defecto
+                  const resultado = await generarObjetivosPorDefecto(Id_usuario, dineroDisponible);
+                  
+                  if (resultado.success) {
+                    console.log(`✅ Objetivos por defecto generados para usuario ${Id_usuario}:`, resultado.objetivos.length);
+                  } else {
+                    console.log(`ℹ️ ${resultado.message} para usuario ${Id_usuario}`);
+                  }
+                } else {
+                  console.log(`⚠️ Dinero disponible es 0 para usuario ${Id_usuario}, no se generan objetivos`);
+                }
+              } else {
+                console.log(`ℹ️ Usuario ${Id_usuario} ya tiene objetivos asignados`);
+              }
+            } catch (error) {
+              console.error('❌ Error en generación de objetivos por defecto:', error);
+              // No fallar la transacción principal por este error
+            }
+          }
+
+          // Verificar objetivos completados en tiempo real (para gastos e ingresos)
+          try {
+            console.log(`🔍 Verificando objetivos completados para usuario ${Id_usuario}`);
+            const resultadoVerificacion = await verificarObjetivosCompletados(Id_usuario);
+            
+            if (resultadoVerificacion.completados > 0 || resultadoVerificacion.fallidos > 0) {
+              console.log(`📊 Objetivos actualizados: ${resultadoVerificacion.completados} completados, ${resultadoVerificacion.fallidos} fallidos`);
+            }
+          } catch (error) {
+            console.error('❌ Error verificando objetivos completados:', error);
+            // No fallar la transacción principal por este error
+          }
+          
           // Devuelve el ID del gasto recién creado
           res.json({ id: results.insertId });
-          // res.json({ id, monto, titulo, detalle, fecha, categoria, usuario });
         }
       });
     });

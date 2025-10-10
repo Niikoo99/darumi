@@ -7,7 +7,10 @@
 
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const app = express();
+const server = http.createServer(app);
 
 const corsOptions = {
   origin: '*', // Permitir cualquier origen durante desarrollo
@@ -30,6 +33,8 @@ const objetivos = require('./methods/methodObjetivos');
 const tipos = require('./methods/methodTiposObjetivos');
 const metas = require('./methods/methodUsuariosObjetivos');
 const { router: automatizacionPagos } = require('./methods/methodAutomatizacionPagos');
+const { mountGraphql } = require('./graphql');
+const { configurarSchedulerMetas, setSocketIO } = require('./schedulerMetas');
 
 app.use(express.json());
 
@@ -42,6 +47,34 @@ app.use('/', tipos);
 app.use('/', metas);
 app.use('/', pagosHabituales);
 app.use('/', automatizacionPagos);
+mountGraphql(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+
+  // Handle user room joining
+  socket.on('join_user_room', (userId) => {
+    const roomName = `user_${userId}`;
+    socket.join(roomName);
+    console.log(`👤 User ${userId} joined room: ${roomName}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
+
+// Set Socket.IO instance for scheduler
+setSocketIO(io);
 
 // Redirect to /hola
 app.get('/', (req, res) => {
@@ -59,7 +92,7 @@ app.get('/chau', (req, res) => {
   res.send('¡Adios, mundo cruel!');
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`El servidor está escuchando en el puerto ${port}`);
   
   // Inicializar el sistema de automatización de pagos habituales
@@ -70,6 +103,7 @@ app.listen(port, () => {
   
   // Configurar el scheduler mensual
   configurarSchedulerMensual();
+  configurarSchedulerMetas();
   
   // Ejecutar procesamiento al inicio (opcional)
   setTimeout(() => {

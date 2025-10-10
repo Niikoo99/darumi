@@ -7,16 +7,28 @@ import {
   TouchableOpacity, 
   Animated,
   Dimensions,
-  Image
+  Image,
+  Alert,
+  RefreshControl,
+  ActivityIndicator
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useUser } from '@clerk/clerk-react';
 import Colors from '../../assets/shared/Colors';
+import objectivesService from '../../services/graphql';
+import socketService from '../../services/socketService';
 
 const { width } = Dimensions.get('window');
 
 export default function Achievement() {
+  const { user } = useUser();
   const [selectedTab, setSelectedTab] = useState('objetivos');
   const [selectedObjective, setSelectedObjective] = useState(null);
+  const [objetivos, setObjetivos] = useState([]);
+  const [logros, setLogros] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [generatingObjectives, setGeneratingObjectives] = useState(false);
   
   // Animaciones
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -46,84 +58,69 @@ export default function Achievement() {
     ]).start();
   }, []);
 
-  // Datos de ejemplo para objetivos
-  const objetivos = [
-    {
-      id: 1,
-      titulo: "Reducir gastos en Entretenimiento",
-      descripcion: "Limitar gastos en entretenimiento a $5,000 este mes",
-      estado: "En progreso",
-      progreso: 75,
-      meta: 5000,
-      actual: 1250,
-      fechaCreacion: "2024-01-01",
-      puntos: 100,
-      icono: "gamepad",
-      color: Colors.warning,
-    },
-    {
-      id: 2,
-      titulo: "Ahorrar para vacaciones",
-      descripcion: "Ahorrar $15,000 para las vacaciones de verano",
-      estado: "Cumplido",
-      progreso: 100,
-      meta: 15000,
-      actual: 15000,
-      fechaCreacion: "2023-12-01",
-      puntos: 200,
-      icono: "plane",
-      color: Colors.success,
-    },
-    {
-      id: 3,
-      titulo: "Pagar deudas",
-      descripcion: "Reducir deudas en $8,000 este trimestre",
-      estado: "Fallido",
-      progreso: 45,
-      meta: 8000,
-      actual: 3600,
-      fechaCreacion: "2023-11-01",
-      puntos: 0,
-      icono: "credit-card",
-      color: Colors.danger,
-    },
-  ];
+  // Fetch data from GraphQL
+  const fetchData = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      console.log('🔍 Fetching objectives data for user:', user.id);
+      
+      // Fetch current progress and achievements history in parallel
+      const [currentProgress, achievementsHistory] = await Promise.all([
+        objectivesService.getCurrentProgress(user.id),
+        objectivesService.getAchievementsHistory(user.id),
+      ]);
 
-  // Datos de ejemplo para logros
-  const logros = [
-    {
-      id: 1,
-      titulo: "Primer Ahorro",
-      descripcion: "Completaste tu primer objetivo de ahorro",
-      fechaObtenido: "2023-12-15",
-      puntos: 50,
-      icono: "trophy",
-      color: Colors.primary,
-      raro: false,
-    },
-    {
-      id: 2,
-      titulo: "Ahorrador Experto",
-      descripcion: "Ahorraste más de $10,000 en un mes",
-      fechaObtenido: "2024-01-20",
-      puntos: 150,
-      icono: "medal",
-      color: Colors.success,
-      raro: true,
-    },
-    {
-      id: 3,
-      titulo: "Consistencia",
-      descripcion: "Completaste 5 objetivos consecutivos",
-      fechaObtenido: "2024-01-25",
-      puntos: 300,
-      icono: "star",
-      color: Colors.warning,
-      raro: false,
-    },
-  ];
+      console.log('📊 Current progress:', currentProgress);
+      console.log('🏆 Achievements history:', achievementsHistory);
 
-  const triggerCelebration = () => {
+      // Transform current progress data
+      const transformedObjetivos = currentProgress.map(obj => ({
+        id: obj.idRelacion,
+        titulo: obj.titulo,
+        descripcion: `Meta: $${obj.valorObjetivo.toLocaleString()}`,
+        estado: "En progreso",
+        progreso: Math.min(100, Math.round((obj.valorActual / obj.valorObjetivo) * 100)),
+        meta: obj.valorObjetivo,
+        actual: obj.valorActual,
+        fechaCreacion: new Date().toISOString(),
+        puntos: 0,
+        icono: obj.categoriaId ? "folder" : "chart-line",
+        color: Colors.warning,
+        categoriaId: obj.categoriaId,
+      }));
+
+      // Transform achievements history data
+      const transformedLogros = achievementsHistory.map(obj => ({
+        id: obj.idRelacion,
+        titulo: obj.titulo,
+        descripcion: obj.status === 'Cumplido' 
+          ? `¡Objetivo completado! Ganaste ${obj.puntos} puntos.`
+          : `Meta no cumplida. Objetivo: $${obj.targetValue?.toLocaleString() || 'N/A'}, Gastado: $${obj.finalValue?.toLocaleString() || 'N/A'}`,
+        fechaObtenido: obj.fechaCompletado,
+        puntos: obj.puntos,
+        icono: obj.status === 'Cumplido' ? "trophy" : "times-circle",
+        color: obj.status === 'Cumplido' ? Colors.success : Colors.danger,
+        raro: obj.puntos > 100,
+        status: obj.status,
+        finalValue: obj.finalValue,
+        targetValue: obj.targetValue,
+      }));
+
+      setObjetivos(transformedObjetivos);
+      setLogros(transformedLogros);
+      
+    } catch (error) {
+      console.error('❌ Error fetching objectives data:', error);
+      Alert.alert('Error', 'No se pudieron cargar los objetivos. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const triggerCelebration = (message = '¡FELICIDADES!') => {
     Animated.sequence([
       Animated.timing(celebrationAnim, {
         toValue: 1,
@@ -136,7 +133,63 @@ export default function Achievement() {
         useNativeDriver: true,
       }),
     ]).start();
+    
+    // Show alert for celebration
+    Alert.alert('🎉 ¡Objetivo Completado!', message, [
+      { text: '¡Genial!', style: 'default' }
+    ]);
   };
+
+  // Socket.IO event handlers
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Connect to Socket.IO
+    socketService.connect(user.id);
+
+    // Handle objective completion
+    const handleObjectiveCompleted = (data) => {
+      console.log('🎉 Objective completed:', data);
+      triggerCelebration(`¡${data.title} completado! Ganaste ${data.points} puntos.`);
+      
+      // Refresh data to show updated status
+      setTimeout(() => {
+        fetchData();
+      }, 1000);
+    };
+
+    // Handle objective failure
+    const handleObjectiveFailed = (data) => {
+      console.log('😞 Objective failed:', data);
+      Alert.alert(
+        'Objetivo no cumplido', 
+        `${data.title}: Tu meta era $${data.targetValue?.toLocaleString()}, pero gastaste $${data.finalValue?.toLocaleString()}.`,
+        [{ text: 'Entendido', style: 'default' }]
+      );
+      
+      // Refresh data to show updated status
+      setTimeout(() => {
+        fetchData();
+      }, 1000);
+    };
+
+    // Add event listeners
+    socketService.addEventListener('objective_completed', handleObjectiveCompleted);
+    socketService.addEventListener('objective_failed', handleObjectiveFailed);
+
+    // Initial data fetch
+    fetchData();
+
+    // Check for completed objectives
+    checkCompletedObjectives();
+
+    // Cleanup on unmount
+    return () => {
+      socketService.removeEventListener('objective_completed', handleObjectiveCompleted);
+      socketService.removeEventListener('objective_failed', handleObjectiveFailed);
+      socketService.disconnect();
+    };
+  }, [user?.id]);
 
   const renderProgressBar = (progreso, color) => (
     <View style={styles.progressContainer}>
@@ -252,26 +305,94 @@ export default function Achievement() {
     </Animated.View>
   );
 
-  const renderStats = () => (
-    <View style={styles.statsContainer}>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>{objetivos.length}</Text>
-        <Text style={styles.statLabel}>Objetivos</Text>
+  const renderStats = () => {
+    const totalPuntos = logros.reduce((total, logro) => total + logro.puntos, 0);
+    const objetivosCompletados = logros.filter(logro => logro.status === 'Cumplido').length;
+    
+    return (
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{objetivos.length}</Text>
+          <Text style={styles.statLabel}>En Progreso</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{objetivosCompletados}</Text>
+          <Text style={styles.statLabel}>Completados</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{totalPuntos}</Text>
+          <Text style={styles.statLabel}>Puntos</Text>
+        </View>
       </View>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>
-          {objetivos.filter(o => o.estado === "Cumplido").length}
-        </Text>
-        <Text style={styles.statLabel}>Completados</Text>
-      </View>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>
-          {logros.reduce((total, logro) => total + logro.puntos, 0)}
-        </Text>
-        <Text style={styles.statLabel}>Puntos</Text>
-      </View>
-    </View>
-  );
+    );
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  const handleGenerateDefaultObjectives = async () => {
+    if (!user?.id) return;
+    
+    setGeneratingObjectives(true);
+    try {
+      console.log('🎯 Generando objetivos por defecto para usuario:', user.id);
+      
+      const resultado = await objectivesService.generateDefaultObjectives(user.id);
+      
+      if (resultado.success) {
+        Alert.alert(
+          '🎉 ¡Objetivos Creados!',
+          `Se han generado ${resultado.objetivos.length} objetivos personalizados basados en tu dinero disponible de $${resultado.dineroDisponible.toLocaleString()}.`,
+          [
+            { 
+              text: '¡Genial!', 
+              onPress: () => {
+                // Refrescar datos para mostrar los nuevos objetivos
+                fetchData();
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', resultado.message);
+      }
+    } catch (error) {
+      console.error('❌ Error generando objetivos:', error);
+      Alert.alert('Error', 'No se pudieron generar los objetivos. Intenta nuevamente.');
+    } finally {
+      setGeneratingObjectives(false);
+    }
+  };
+
+  const checkCompletedObjectives = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🔍 Verificando objetivos completados para usuario:', user.id);
+      
+      const resultado = await objectivesService.checkCompletedObjectives(user.id);
+      
+      if (resultado.completados > 0 || resultado.fallidos > 0) {
+        console.log(`📊 Objetivos actualizados: ${resultado.completados} completados, ${resultado.fallidos} fallidos`);
+        
+        // Refrescar datos para mostrar los cambios
+        fetchData();
+        
+        // Mostrar notificación si hay objetivos completados
+        if (resultado.completados > 0) {
+          const objetivosCompletados = resultado.actualizados.filter(obj => obj.cumplido);
+          if (objetivosCompletados.length > 0) {
+            const totalPuntos = objetivosCompletados.reduce((sum, obj) => sum + obj.puntos, 0);
+            triggerCelebration(`¡${objetivosCompletados.length} objetivo(s) completado(s)! Ganaste ${totalPuntos} puntos.`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error verificando objetivos completados:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -306,24 +427,73 @@ export default function Achievement() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         <View style={styles.content}>
-          {selectedTab === 'objetivos' && (
-            <View>
-              <Text style={styles.sectionTitle}>🎯 Mis Objetivos</Text>
-              {objetivos.map(renderObjectiveCard)}
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Cargando objetivos...</Text>
             </View>
           )}
 
-          {selectedTab === 'logros' && (
+          {!loading && selectedTab === 'objetivos' && (
+            <View>
+              <Text style={styles.sectionTitle}>🎯 Mis Objetivos</Text>
+              {objetivos.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <FontAwesome5 name="bullseye" size={48} color={Colors.textSecondary} />
+                  <Text style={styles.emptyStateText}>No tienes objetivos en progreso</Text>
+                  <Text style={styles.emptyStateSubtext}>¡Genera objetivos personalizados basados en tus ingresos!</Text>
+                  
+                  <TouchableOpacity 
+                    style={[styles.generateButton, generatingObjectives && styles.generateButtonDisabled]}
+                    onPress={handleGenerateDefaultObjectives}
+                    disabled={generatingObjectives}
+                  >
+                    {generatingObjectives ? (
+                      <ActivityIndicator size="small" color={Colors.white} />
+                    ) : (
+                      <FontAwesome5 name="magic" size={16} color={Colors.white} />
+                    )}
+                    <Text style={styles.generateButtonText}>
+                      {generatingObjectives ? 'Generando...' : 'Generar Objetivos'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                objetivos.map(renderObjectiveCard)
+              )}
+            </View>
+          )}
+
+          {!loading && selectedTab === 'logros' && (
             <View>
               <Text style={styles.sectionTitle}>🏆 Mis Logros</Text>
-              {logros.map(renderAchievementCard)}
-          </View>
-        )}
+              {logros.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <FontAwesome5 name="trophy" size={48} color={Colors.textSecondary} />
+                  <Text style={styles.emptyStateText}>No tienes logros aún</Text>
+                  <Text style={styles.emptyStateSubtext}>¡Completa objetivos para ganar puntos!</Text>
+                </View>
+              ) : (
+                logros.map(renderAchievementCard)
+              )}
+            </View>
+          )}
 
           {/* Botón de Celebración (para demo) */}
-          <TouchableOpacity style={styles.celebrationButton} onPress={triggerCelebration}>
+          <TouchableOpacity style={styles.celebrationButton} onPress={() => triggerCelebration('¡Demo de celebración!')}>
             <FontAwesome5 name="gift" size={20} color={Colors.white} />
             <Text style={styles.celebrationButtonText}>¡Celebrar Logro!</Text>
           </TouchableOpacity>
@@ -658,5 +828,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textDark,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  generateButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 20,
+    gap: 8,
+  },
+  generateButtonDisabled: {
+    backgroundColor: Colors.textSecondary,
+  },
+  generateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
   },
 });

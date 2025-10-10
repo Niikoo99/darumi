@@ -12,7 +12,11 @@
     "contributors": [],
     "scripts": {
         "start": "node main.js",
-        "test-automatizacion": "node testAutomatizacionPagos.js"
+        "migrate": "node migrate.js",
+        "test-automatizacion": "node testAutomatizacionPagos.js",
+        "test-objetivos": "node testSchedulerMetas.js",
+        "test-default-objectives": "node testDefaultObjectives.js",
+        "test-realtime-check": "node testRealTimeCheck.js"
     },
     "dependencies": {
         "cors": "^2.8.5",

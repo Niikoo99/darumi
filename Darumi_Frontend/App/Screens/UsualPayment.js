@@ -13,6 +13,9 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../assets/shared/Colors';
+import ScrollableTransactionForm from '../Components/Home/ScrollableTransactionForm';
+import ModernInputField from '../Components/Home/ModernInputField';
+import FixedTransactionToggle from '../Components/Home/FixedTransactionToggle';
 
 export default function UsualPayment() {
   const [payments, setPayments] = useState([
@@ -25,7 +28,7 @@ export default function UsualPayment() {
 
   const [newPaymentName, setNewPaymentName] = useState('');
   const [newPaymentAmount, setNewPaymentAmount] = useState('');
-  const [paymentType, setPaymentType] = useState('Pago');
+  const [isExpenseSelected, setIsExpenseSelected] = useState(true); // Cambio para usar el mismo patrón que Home
   const [modalVisible, setModalVisible] = useState(false);
   
   // Animaciones
@@ -60,6 +63,7 @@ export default function UsualPayment() {
 
   const handleAddPayment = () => {
     if (newPaymentName && newPaymentAmount) {
+      const paymentType = isExpenseSelected ? 'Pago' : 'Ingreso';
       const newPayment = {
         id: Math.random().toString(),
         name: newPaymentName,
@@ -109,6 +113,11 @@ export default function UsualPayment() {
 
   const getPaymentColor = (type) => {
     return type === 'Pago' ? Colors.danger : Colors.success;
+  };
+
+  // Función para manejar el toggle de gasto/ingreso
+  const handleToggleSwitch = (isExpense) => {
+    setIsExpenseSelected(isExpense);
   };
 
   const openModal = () => {
@@ -242,72 +251,63 @@ export default function UsualPayment() {
         </View>
       </ScrollView>
 
-      {/* Modal para Agregar Pago */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+      {/* Modal Rediseñado para Agregar Pago */}
+      <ScrollableTransactionForm
+        isVisible={modalVisible}
+        onClose={closeModal}
+        title={isExpenseSelected ? '💸 Nuevo Pago Habitual' : '💰 Nuevo Ingreso Habitual'}
+        subtitle="Registra tu pago o ingreso recurrente"
       >
-        <View style={styles.modalBackground}>
-          <Animated.View
-            style={[
-              styles.modalContainer,
-              {
-                transform: [{
-                  translateY: modalAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [300, 0],
-                  }),
-                }],
-                opacity: modalAnim,
-              },
-            ]}
+        {/* Toggle Gastos/Ingresos */}
+        <FixedTransactionToggle 
+          isExpense={isExpenseSelected}
+          onToggle={handleToggleSwitch}
+        />
+
+        {/* Campo de nombre */}
+        <ModernInputField
+          label="¿Cómo se llama este pago?"
+          placeholder={isExpenseSelected ? "Ej: Alquiler, Netflix, Gym..." : "Ej: Salario, Freelance, Venta..."}
+          value={newPaymentName}
+          onChangeText={setNewPaymentName}
+          keyboardType="default"
+        />
+
+        {/* Campo de monto */}
+        <ModernInputField
+          label="Monto"
+          placeholder="0"
+          value={newPaymentAmount}
+          onChangeText={setNewPaymentAmount}
+          keyboardType="numeric"
+        />
+
+        {/* Botones de acción */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.cancelButton} 
+            onPress={closeModal}
+            activeOpacity={0.7}
           >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nuevo Pago Habitual</Text>
-              <Text style={styles.modalSubtitle}>Agrega un pago o ingreso recurrente</Text>
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre del pago"
-              placeholderTextColor={Colors.textSecondary}
-              value={newPaymentName}
-              onChangeText={setNewPaymentName}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Monto"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="numeric"
-              value={newPaymentAmount}
-              onChangeText={setNewPaymentAmount}
-            />
-
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={paymentType}
-                onValueChange={setPaymentType}
-                style={styles.picker}
-              >
-                <Picker.Item label="Pago" value="Pago" color={Colors.text} />
-                <Picker.Item label="Ingreso" value="Ingreso" color={Colors.text} />
-              </Picker>
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={handleAddPayment}>
-                <Text style={styles.saveButtonText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[
+              styles.saveButton,
+              (!newPaymentName.trim() || !newPaymentAmount) 
+                ? styles.disabledButton 
+                : (isExpenseSelected ? styles.expenseButton : styles.incomeButton)
+            ]} 
+            onPress={handleAddPayment}
+            activeOpacity={0.7}
+            disabled={!newPaymentName.trim() || !newPaymentAmount}
+          >
+            <Text style={styles.saveButtonText}>
+              {isExpenseSelected ? 'Guardar Pago' : 'Guardar Ingreso'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </ScrollableTransactionForm>
     </View>
   );
 }
@@ -466,82 +466,70 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textDark,
   },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: Colors.backgroundModal,
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    minHeight: 400,
-  },
-  modalHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.textDark,
-    marginBottom: 8,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderWidth: 2,
-    borderColor: Colors.borderLight,
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.textDark,
-    marginBottom: 16,
-  },
-  pickerContainer: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderWidth: 2,
-    borderColor: Colors.borderLight,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  picker: {
-    height: 50,
-    color: Colors.textDark,
-  },
-  modalButtons: {
+  actionButtonsContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
+    marginTop: 24,
+    marginBottom: 24,
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 24,
     borderRadius: 16,
     backgroundColor: Colors.backgroundSecondary,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   saveButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
     borderRadius: 16,
-    backgroundColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+  },
+  expenseButton: {
+    backgroundColor: Colors.danger,
+    shadowColor: Colors.danger,
+  },
+  incomeButton: {
+    backgroundColor: Colors.success,
+    shadowColor: Colors.success,
+  },
+  disabledButton: {
+    backgroundColor: '#666',
+    shadowOpacity: 0.1,
+    elevation: 2,
+    shadowColor: '#666',
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textDark,
+    color: Colors.white,
   },
 });
