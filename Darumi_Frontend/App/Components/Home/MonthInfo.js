@@ -7,6 +7,7 @@ import Colors from '../../../assets/shared/Colors';
 import { buildApiUrl, getEndpoints } from '../../../config/api';
 import app from './../../../assets/images/darumi.png';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { formatCurrency } from '../../../utils/formatting';
 
 export default function MonthInfo({ onEditItem }) {
   const capitalizeFirstLetter = (string) => {
@@ -240,7 +241,7 @@ export default function MonthInfo({ onEditItem }) {
             </View>
             {showExpenses && (
             <View>  
-              <Text style={[styles.itemAmount, amountStyle]}>${Math.abs(item.Monto_gasto)}</Text> 
+              <Text style={[styles.itemAmount, amountStyle]}>{formatCurrency(item.Monto_gasto)}</Text> 
             </View>)}
           </View>
           <Text style={styles.itemDetail}>{item.Detalle_gasto}</Text>
@@ -306,15 +307,15 @@ export default function MonthInfo({ onEditItem }) {
         <View style={styles.totalsContainer}>
         <View style={styles.totalColumn}>
           <Text style={styles.totalLabel}>Gastos</Text>
-          <Text style={styles.negativeAmountTotal}>${Math.abs(totalPositiveExpenses.toFixed(2))}</Text>
+          <Text style={styles.negativeAmountTotal}>{formatCurrency(totalPositiveExpenses)}</Text>
         </View>
         <View style={styles.totalColumn}>
           <Text style={styles.totalLabel}>Ingresos</Text>
-          <Text style={styles.positiveAmountTotal}>${Math.abs(totalNegativeExpenses.toFixed(2))}</Text>
+          <Text style={styles.positiveAmountTotal}>{formatCurrency(totalNegativeExpenses)}</Text>
         </View>
         <View style={styles.totalColumn}>
           <Text style={styles.totalLabel}>Balance</Text>
-          <Text style={totalExpenses > 0 ? styles.positiveAmountTotal : styles.negativeAmountTotal}>${totalExpenses.toFixed(2)}</Text>
+          <Text style={totalExpenses > 0 ? styles.positiveAmountTotal : styles.negativeAmountTotal}>{formatCurrency(totalExpenses)}</Text>
         </View></View>
       )}
       <FlatList
@@ -407,8 +408,11 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   itemAmount: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'right',
+    flexWrap: 'wrap',
+    maxWidth: 80,
   },
   refreshIconContainer: {
     alignSelf: 'center', // Center the refresh icon vertically
@@ -445,16 +449,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   positiveAmountTotal: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 2,
     color: 'green',
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   negativeAmountTotal: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 2,
     color: 'red',
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   totalsContainer: {
     flexDirection: 'row',

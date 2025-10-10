@@ -19,7 +19,8 @@ const ScrollableTransactionForm = ({
   isVisible, 
   onClose,
   title,
-  subtitle 
+  subtitle,
+  actionButtons 
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
@@ -94,6 +95,13 @@ const ScrollableTransactionForm = ({
           >
             {children}
           </ScrollView>
+
+          {/* Action Buttons */}
+          {actionButtons && (
+            <View style={styles.actionButtonsContainer}>
+              {actionButtons}
+            </View>
+          )}
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -159,8 +167,30 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 24,
-    minHeight: screenHeight * 0.5,
+    paddingBottom: 100, // Espacio para los botones fijos
+    minHeight: screenHeight * 0.4,
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Safe area para iOS
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    gap: 16,
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

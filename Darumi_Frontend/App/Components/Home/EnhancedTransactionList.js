@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { formatCurrency } from '../../../utils/formatting';
 
 const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction }) => {
   // Mapeo de categorías a iconos y colores
@@ -68,7 +69,7 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
             styles.amountText,
             isExpense ? styles.expenseAmount : styles.incomeAmount
           ]}>
-            {isExpense ? '-' : '+'}${Math.abs(item.Monto_gasto).toFixed(2)}
+            {isExpense ? '-' : '+'}{formatCurrency(Math.abs(item.Monto_gasto))}
           </Text>
         </View>
       </TouchableOpacity>
@@ -179,8 +180,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   amountText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
+    textAlign: 'right',
+    flexWrap: 'wrap',
+    maxWidth: 100,
   },
   expenseAmount: {
     color: Colors.danger,

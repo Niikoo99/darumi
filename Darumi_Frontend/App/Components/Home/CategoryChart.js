@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { formatCurrency } from '../../../utils/formatting';
 
 const CategoryChart = ({ categories = [] }) => {
   // Mapeo de categorías a iconos y colores
@@ -39,7 +40,7 @@ const CategoryChart = ({ categories = [] }) => {
               
               <View style={styles.chartInfo}>
                 <Text style={styles.chartCategory}>{category.name}</Text>
-                <Text style={styles.chartAmount}>${Math.abs(category.total).toFixed(2)}</Text>
+                <Text style={styles.chartAmount}>{formatCurrency(category.total)}</Text>
               </View>
               
               <View style={styles.chartBar}>
@@ -116,9 +117,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   chartAmount: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
     fontWeight: '500',
+    flexWrap: 'wrap',
   },
   chartBar: {
     height: 8,

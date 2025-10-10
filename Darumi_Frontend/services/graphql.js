@@ -104,6 +104,100 @@ export const OBJECTIVES_QUERIES = {
       }
     }
   `,
+
+  // Get categories
+  GET_CATEGORIES: `
+    query Categorias {
+      categorias {
+        id
+        nombre
+      }
+    }
+  `,
+
+  // Get objective types
+  GET_OBJECTIVE_TYPES: `
+    query TiposObjetivos {
+      tiposObjetivos {
+        id
+        nombre
+      }
+    }
+  `,
+
+  // Get custom objectives
+  GET_CUSTOM_OBJECTIVES: `
+    query ObjetivosPersonalizados($usuarioIdentifier: String!) {
+      objetivosPersonalizados(usuarioIdentifier: $usuarioIdentifier) {
+        id
+        titulo
+        valorObjetivo
+        multiplicador
+        tipoObjetivo
+        categoriaObjetivo
+        fechaCreacion
+        status
+        fechaCompletado
+        puntosOtorgados
+        valorFinal
+        nombreCategoria
+        nombreTipoObjetivo
+      }
+    }
+  `,
+
+  // Create custom objective
+  CREATE_CUSTOM_OBJECTIVE: `
+    mutation CrearObjetivoPersonalizado(
+      $usuarioIdentifier: String!
+      $titulo: String!
+      $valorObjetivo: Float!
+      $tipoObjetivo: Int!
+      $categoriaObjetivo: Int
+      $multiplicador: Float
+      $descripcion: String
+    ) {
+      crearObjetivoPersonalizado(
+        usuarioIdentifier: $usuarioIdentifier
+        titulo: $titulo
+        valorObjetivo: $valorObjetivo
+        tipoObjetivo: $tipoObjetivo
+        categoriaObjetivo: $categoriaObjetivo
+        multiplicador: $multiplicador
+        descripcion: $descripcion
+      ) {
+        success
+        message
+        objetivo {
+          id
+          titulo
+          valorObjetivo
+          multiplicador
+          tipoObjetivo
+          categoriaObjetivo
+          fechaCreacion
+        }
+        errores
+      }
+    }
+  `,
+
+  // Delete custom objective
+  DELETE_CUSTOM_OBJECTIVE: `
+    mutation EliminarObjetivoPersonalizado(
+      $usuarioIdentifier: String!
+      $objetivoId: Int!
+    ) {
+      eliminarObjetivoPersonalizado(
+        usuarioIdentifier: $usuarioIdentifier
+        objetivoId: $objetivoId
+      ) {
+        success
+        message
+        errores
+      }
+    }
+  `,
 };
 
 // Helper functions for objectives
@@ -157,6 +251,69 @@ export const objectivesService = {
     } catch (error) {
       console.error('Error checking completed objectives:', error);
       return { verificados: 0, completados: 0, fallidos: 0, actualizados: [] };
+    }
+  },
+
+  // Get categories
+  getCategories: async () => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.GET_CATEGORIES);
+      return data.categorias || [];
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  },
+
+  // Get objective types
+  getObjectiveTypes: async () => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.GET_OBJECTIVE_TYPES);
+      return data.tiposObjetivos || [];
+    } catch (error) {
+      console.error('Error fetching objective types:', error);
+      return [];
+    }
+  },
+
+  // Get custom objectives
+  getCustomObjectives: async (usuarioIdentifier) => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.GET_CUSTOM_OBJECTIVES, {
+        usuarioIdentifier,
+      });
+      return data.objetivosPersonalizados || [];
+    } catch (error) {
+      console.error('Error fetching custom objectives:', error);
+      return [];
+    }
+  },
+
+  // Create custom objective
+  createCustomObjective: async (usuarioIdentifier, objectiveData) => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.CREATE_CUSTOM_OBJECTIVE, {
+        usuarioIdentifier,
+        ...objectiveData,
+      });
+      return data.crearObjetivoPersonalizado || { success: false, message: 'Error desconocido' };
+    } catch (error) {
+      console.error('Error creating custom objective:', error);
+      return { success: false, message: error.message };
+    }
+  },
+
+  // Delete custom objective
+  deleteCustomObjective: async (usuarioIdentifier, objetivoId) => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.DELETE_CUSTOM_OBJECTIVE, {
+        usuarioIdentifier,
+        objetivoId,
+      });
+      return data.eliminarObjetivoPersonalizado || { success: false, message: 'Error desconocido' };
+    } catch (error) {
+      console.error('Error deleting custom objective:', error);
+      return { success: false, message: error.message };
     }
   },
 };

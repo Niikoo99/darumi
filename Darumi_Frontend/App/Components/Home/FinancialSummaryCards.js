@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { formatCurrency } from '../../../utils/formatting';
 
 const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) => {
   return (
@@ -12,7 +13,7 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
         </View>
         <Text style={styles.cardLabel}>Gastos</Text>
         <Text style={[styles.cardAmount, styles.expenseAmount]}>
-          {currency}{Math.abs(expenses).toFixed(2)}
+          {formatCurrency(expenses)}
         </Text>
       </View>
 
@@ -22,7 +23,7 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
         </View>
         <Text style={styles.cardLabel}>Ingresos</Text>
         <Text style={[styles.cardAmount, styles.incomeAmount]}>
-          {currency}{Math.abs(income).toFixed(2)}
+          {formatCurrency(income)}
         </Text>
       </View>
 
@@ -35,7 +36,7 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
           styles.cardAmount, 
           balance >= 0 ? styles.positiveAmount : styles.negativeAmount
         ]}>
-          {currency}{Math.abs(balance).toFixed(2)}
+          {formatCurrency(balance)}
         </Text>
       </View>
     </View>
@@ -47,13 +48,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    gap: 12,
+    gap: 8,
   },
   card: {
     flex: 1,
     backgroundColor: Colors.backgroundCard,
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: Colors.border,
@@ -65,6 +66,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 4,
+    minWidth: 80,
   },
   cardIcon: {
     width: 40,
@@ -83,9 +85,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cardAmount: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: Colors.text,
+    textAlign: 'center',
+    flexWrap: 'wrap',
+    maxWidth: '100%',
   },
   expenseAmount: {
     color: Colors.danger,

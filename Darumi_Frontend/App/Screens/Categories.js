@@ -5,6 +5,7 @@ import Colors from '../../assets/shared/Colors';
 import { buildApiUrl, getEndpoints } from '../../config/api';
 import axios from 'axios';
 import { useUser } from '@clerk/clerk-react';
+import { formatCurrency } from '../../utils/formatting';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -184,7 +185,7 @@ export default function Categories() {
                   <Text style={styles.selectedStatLabel}>Transacciones</Text>
                 </View>
                 <View style={styles.selectedStat}>
-                  <Text style={styles.selectedStatNumber}>$2,450</Text>
+                  <Text style={styles.selectedStatNumber}>{formatCurrency(2450)}</Text>
                   <Text style={styles.selectedStatLabel}>Total</Text>
                 </View>
               </View>
@@ -256,10 +257,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.primary,
     marginBottom: 4,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   statLabel: {
     fontSize: 12,
@@ -348,10 +351,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedStatNumber: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.primary,
     marginBottom: 4,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   selectedStatLabel: {
     fontSize: 12,

@@ -16,7 +16,8 @@
         "test-automatizacion": "node testAutomatizacionPagos.js",
         "test-objetivos": "node testSchedulerMetas.js",
         "test-default-objectives": "node testDefaultObjectives.js",
-        "test-realtime-check": "node testRealTimeCheck.js"
+        "test-realtime-check": "node testRealTimeCheck.js",
+        "test-custom-objectives": "node testCustomObjectives.js"
     },
     "dependencies": {
         "cors": "^2.8.5",

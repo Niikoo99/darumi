@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
+import { formatCurrency } from '../../../utils/formatting';
 
 const BalanceProgressCard = ({ 
   balance, 
@@ -30,14 +31,14 @@ const BalanceProgressCard = ({
       <View style={styles.header}>
         <Text style={styles.title}>Balance del Mes</Text>
         <Text style={[styles.balanceAmount, { color: getBalanceColor() }]}>
-          {currency}{Math.abs(balance).toFixed(2)}
+          {formatCurrency(balance)}
         </Text>
       </View>
       
       <View style={styles.progressSection}>
         <View style={styles.progressLabels}>
           <Text style={styles.progressLabel}>Dinero Disponible</Text>
-          <Text style={styles.progressValue}>{currency}{effectiveAvailableMoney.toFixed(2)}</Text>
+          <Text style={styles.progressValue}>{formatCurrency(effectiveAvailableMoney)}</Text>
         </View>
         
         <View style={styles.progressBarContainer}>
@@ -55,7 +56,7 @@ const BalanceProgressCard = ({
         </View>
         
         <Text style={styles.remainingText}>
-          Te quedan {currency}{remainingMoney.toFixed(2)} por gastar
+          Te quedan {formatCurrency(remainingMoney)} por gastar
         </Text>
       </View>
     </View>
@@ -90,9 +91,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: Colors.text,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   progressSection: {
     marginTop: 8,
@@ -108,9 +111,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   progressValue: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.textSecondary,
     fontWeight: '600',
+    textAlign: 'right',
+    flexWrap: 'wrap',
   },
   progressBarContainer: {
     marginBottom: 8,
@@ -128,9 +133,10 @@ const styles = StyleSheet.create({
   },
   remainingText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.textSecondary,
     fontWeight: '500',
+    flexWrap: 'wrap',
   },
 });
 

@@ -16,6 +16,7 @@ import Colors from '../../assets/shared/Colors';
 import ScrollableTransactionForm from '../Components/Home/ScrollableTransactionForm';
 import ModernInputField from '../Components/Home/ModernInputField';
 import FixedTransactionToggle from '../Components/Home/FixedTransactionToggle';
+import { formatCurrency } from '../../utils/formatting';
 
 export default function UsualPayment() {
   const [payments, setPayments] = useState([
@@ -164,7 +165,7 @@ export default function UsualPayment() {
           styles.paymentAmount,
           { color: item.type === 'Pago' ? Colors.danger : Colors.success }
         ]}>
-          ${Math.abs(item.amount).toLocaleString()}
+          {formatCurrency(item.amount)}
         </Text>
         <TouchableOpacity 
           onPress={() => handleRemovePayment(item.id)}
@@ -198,7 +199,7 @@ export default function UsualPayment() {
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, totalAmountStyle]}>
-            ${Math.abs(totalAmount).toLocaleString()}
+            {formatCurrency(totalAmount)}
           </Text>
           <Text style={styles.statLabel}>Balance</Text>
         </View>
@@ -235,7 +236,7 @@ export default function UsualPayment() {
             <View style={styles.totalCard}>
               <Text style={styles.totalLabel}>Balance Total</Text>
               <Text style={[styles.totalAmount, totalAmountStyle]}>
-                ${totalAmount.toLocaleString()}
+                {formatCurrency(totalAmount)}
               </Text>
               <Text style={styles.totalSubtext}>
                 {totalAmount >= 0 ? 'Ingresos superan gastos' : 'Gastos superan ingresos'}
@@ -257,6 +258,32 @@ export default function UsualPayment() {
         onClose={closeModal}
         title={isExpenseSelected ? '💸 Nuevo Pago Habitual' : '💰 Nuevo Ingreso Habitual'}
         subtitle="Registra tu pago o ingreso recurrente"
+        actionButtons={
+          <>
+            <TouchableOpacity 
+              style={styles.fixedCancelButton} 
+              onPress={closeModal}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.fixedCancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.fixedSaveButton,
+                (!newPaymentName.trim() || !newPaymentAmount) 
+                  ? styles.fixedDisabledButton 
+                  : (isExpenseSelected ? styles.fixedExpenseButton : styles.fixedIncomeButton)
+              ]} 
+              onPress={handleAddPayment}
+              activeOpacity={0.8}
+              disabled={!newPaymentName.trim() || !newPaymentAmount}
+            >
+              <Text style={styles.fixedSaveButtonText}>
+                {isExpenseSelected ? 'Guardar Pago' : 'Guardar Ingreso'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        }
       >
         {/* Toggle Gastos/Ingresos */}
         <FixedTransactionToggle 
@@ -282,31 +309,6 @@ export default function UsualPayment() {
           keyboardType="numeric"
         />
 
-        {/* Botones de acción */}
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity 
-            style={styles.cancelButton} 
-            onPress={closeModal}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[
-              styles.saveButton,
-              (!newPaymentName.trim() || !newPaymentAmount) 
-                ? styles.disabledButton 
-                : (isExpenseSelected ? styles.expenseButton : styles.incomeButton)
-            ]} 
-            onPress={handleAddPayment}
-            activeOpacity={0.7}
-            disabled={!newPaymentName.trim() || !newPaymentAmount}
-          >
-            <Text style={styles.saveButtonText}>
-              {isExpenseSelected ? 'Guardar Pago' : 'Guardar Ingreso'}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollableTransactionForm>
     </View>
   );
@@ -346,10 +348,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.primary,
     marginBottom: 4,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   statLabel: {
     fontSize: 12,
@@ -412,9 +416,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   paymentAmount: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'right',
+    flexWrap: 'wrap',
+    maxWidth: 100,
   },
   deleteButton: {
     padding: 8,
@@ -528,6 +535,77 @@ const styles = StyleSheet.create({
     shadowColor: '#666',
   },
   saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  // Fixed Action Buttons (igual que otros formularios)
+  fixedButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Safe area para iOS
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    gap: 16,
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fixedCancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fixedCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  fixedSaveButton: {
+    flex: 2,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fixedExpenseButton: {
+    backgroundColor: Colors.danger,
+    shadowColor: Colors.danger,
+  },
+  fixedIncomeButton: {
+    backgroundColor: Colors.success,
+    shadowColor: Colors.success,
+  },
+  fixedDisabledButton: {
+    backgroundColor: Colors.textSecondary,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  fixedSaveButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.white,

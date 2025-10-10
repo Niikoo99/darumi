@@ -3,6 +3,13 @@ const express = require('express');
 const connection = require('./db');
 const { generarObjetivosPorDefecto, necesitaObjetivosPorDefecto, obtenerDineroDisponible } = require('./services/defaultObjectivesGenerator');
 const { verificarObjetivosCompletados, verificarTodosLosObjetivosCompletados } = require('./services/realTimeObjectiveChecker');
+const { 
+  obtenerCategorias, 
+  obtenerTiposObjetivos, 
+  crearObjetivoPersonalizado, 
+  obtenerObjetivosPersonalizados,
+  eliminarObjetivoPersonalizado 
+} = require('./services/customObjectivesService');
 
 function query(sql, params) {
   return new Promise((resolve, reject) => {
@@ -66,11 +73,64 @@ const schema = buildSchema(`
     actualizados: [ObjetivoActualizado!]!
   }
 
+  type Categoria {
+    id: Int!
+    nombre: String!
+  }
+
+  type TipoObjetivo {
+    id: Int!
+    nombre: String!
+  }
+
+  type ObjetivoPersonalizado {
+    id: Int!
+    titulo: String!
+    valorObjetivo: Float!
+    multiplicador: Float!
+    tipoObjetivo: Int!
+    categoriaObjetivo: Int
+    fechaCreacion: String!
+    status: String!
+    fechaCompletado: String
+    puntosOtorgados: Int
+    valorFinal: Float
+    nombreCategoria: String
+    nombreTipoObjetivo: String
+  }
+
+  type ResultadoCreacionObjetivo {
+    success: Boolean!
+    message: String!
+    objetivo: ObjetivoPersonalizado
+    errores: [String!]
+  }
+
   type Query {
     progresoActual(usuarioIdentifier: String!): [ObjetivoProgreso!]!
     historialLogros(usuarioIdentifier: String!): [Logro!]!
     generarObjetivosPorDefecto(usuarioIdentifier: String!): ResultadoGeneracion!
     verificarObjetivosCompletados(usuarioIdentifier: String!): ResultadoVerificacion!
+    categorias: [Categoria!]!
+    tiposObjetivos: [TipoObjetivo!]!
+    objetivosPersonalizados(usuarioIdentifier: String!): [ObjetivoPersonalizado!]!
+  }
+
+  type Mutation {
+    crearObjetivoPersonalizado(
+      usuarioIdentifier: String!
+      titulo: String!
+      valorObjetivo: Float!
+      tipoObjetivo: Int!
+      categoriaObjetivo: Int
+      multiplicador: Float
+      descripcion: String
+    ): ResultadoCreacionObjetivo!
+    
+    eliminarObjetivoPersonalizado(
+      usuarioIdentifier: String!
+      objetivoId: Int!
+    ): ResultadoCreacionObjetivo!
   }
 `);
 
@@ -190,6 +250,101 @@ const root = {
         completados: 0,
         fallidos: 0,
         actualizados: []
+      };
+    }
+  },
+
+  // Queries para objetivos personalizados
+  categorias: async () => {
+    try {
+      const categorias = await obtenerCategorias();
+      return categorias.map(cat => ({
+        id: cat.Id_categoria,
+        nombre: cat.Nombre_categoria
+      }));
+    } catch (error) {
+      console.error('Error obteniendo categorías:', error);
+      return [];
+    }
+  },
+
+  tiposObjetivos: async () => {
+    try {
+      const tipos = await obtenerTiposObjetivos();
+      return tipos.map(tipo => ({
+        id: tipo.Id_tipo_objetivo,
+        nombre: tipo.Nombre_tipo_objetivo
+      }));
+    } catch (error) {
+      console.error('Error obteniendo tipos de objetivos:', error);
+      return [];
+    }
+  },
+
+  objetivosPersonalizados: async ({ usuarioIdentifier }) => {
+    try {
+      const objetivos = await obtenerObjetivosPersonalizados(usuarioIdentifier);
+      return objetivos.map(obj => ({
+        id: obj.Id_objetivo,
+        titulo: obj.Titulo_objetivo,
+        valorObjetivo: obj.Valor_objetivo,
+        multiplicador: obj.Multiplicador,
+        tipoObjetivo: obj.Tipo_objetivo,
+        categoriaObjetivo: obj.Categoria_objetivo,
+        fechaCreacion: obj.Fecha_creacion_objetivo,
+        status: obj.Status,
+        fechaCompletado: obj.Fecha_completado,
+        puntosOtorgados: obj.Puntos_otorgados,
+        valorFinal: obj.Final_value,
+        nombreCategoria: obj.Nombre_categoria,
+        nombreTipoObjetivo: obj.Nombre_tipo_objetivo
+      }));
+    } catch (error) {
+      console.error('Error obteniendo objetivos personalizados:', error);
+      return [];
+    }
+  },
+
+  // Mutations para objetivos personalizados
+  crearObjetivoPersonalizado: async ({ usuarioIdentifier, titulo, valorObjetivo, tipoObjetivo, categoriaObjetivo, multiplicador, descripcion }) => {
+    try {
+      console.log(`🎯 GraphQL: Creando objetivo personalizado para ${usuarioIdentifier}`);
+      
+      const resultado = await crearObjetivoPersonalizado(usuarioIdentifier, {
+        titulo,
+        valorObjetivo,
+        tipoObjetivo,
+        categoriaObjetivo,
+        multiplicador,
+        descripcion
+      });
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ Error en GraphQL crearObjetivoPersonalizado:', error);
+      return {
+        success: false,
+        message: `Error creando objetivo: ${error.message}`,
+        objetivo: null,
+        errores: [error.message]
+      };
+    }
+  },
+
+  eliminarObjetivoPersonalizado: async ({ usuarioIdentifier, objetivoId }) => {
+    try {
+      console.log(`🗑️ GraphQL: Eliminando objetivo ${objetivoId} para ${usuarioIdentifier}`);
+      
+      const resultado = await eliminarObjetivoPersonalizado(usuarioIdentifier, objetivoId);
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ Error en GraphQL eliminarObjetivoPersonalizado:', error);
+      return {
+        success: false,
+        message: `Error eliminando objetivo: ${error.message}`,
+        objetivo: null,
+        errores: [error.message]
       };
     }
   },

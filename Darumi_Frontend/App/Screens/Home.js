@@ -24,6 +24,7 @@ import axios from 'axios';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../assets/shared/Colors';
 import { buildApiUrl, getEndpoints, testConnection } from '../../config/api';
+import { formatCurrency } from '../../utils/formatting';
 
 export default function Home() {
   
@@ -427,17 +428,17 @@ export default function Home() {
     >
       <View style={styles.statCard}>
         <FontAwesome5 name="chart-line" size={20} color={Colors.primary} />
-        <Text style={styles.statNumber}>${financialData.balance.toLocaleString()}</Text>
+        <Text style={styles.statNumber}>{formatCurrency(financialData.balance)}</Text>
         <Text style={styles.statLabel}>Balance</Text>
       </View>
       <View style={styles.statCard}>
         <FontAwesome5 name="arrow-down" size={20} color={Colors.danger} />
-        <Text style={styles.statNumber}>${financialData.totalExpenses.toLocaleString()}</Text>
+        <Text style={styles.statNumber}>{formatCurrency(financialData.totalExpenses)}</Text>
         <Text style={styles.statLabel}>Gastos</Text>
       </View>
       <View style={styles.statCard}>
         <FontAwesome5 name="arrow-up" size={20} color={Colors.success} />
-        <Text style={styles.statNumber}>${financialData.totalIncome.toLocaleString()}</Text>
+        <Text style={styles.statNumber}>{formatCurrency(financialData.totalIncome)}</Text>
         <Text style={styles.statLabel}>Ingresos</Text>
       </View>
     </Animated.View>
@@ -565,6 +566,38 @@ export default function Home() {
         onClose={closeModal}
         title={isExpensesSelected ? '💸 Nuevo Gasto' : '💰 Nuevo Ingreso'}
         subtitle="Registra tu transacción rápidamente"
+        actionButtons={
+          <>
+            <TouchableOpacity 
+              style={styles.fixedCancelButton} 
+              onPress={closeModal}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.fixedCancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.fixedSaveButton,
+                (isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)) 
+                  ? styles.fixedDisabledButton 
+                  : (isExpensesSelected ? styles.fixedExpenseButton : styles.fixedIncomeButton)
+              ]} 
+              onPress={handleGuardar}
+              activeOpacity={0.8}
+              disabled={isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)}
+            >
+              {isSaving ? (
+                <View style={styles.fixedLoadingContainer}>
+                  <Text style={styles.fixedLoadingText}>Guardando...</Text>
+                </View>
+              ) : (
+                <Text style={styles.fixedSaveButtonText}>
+                  {isExpensesSelected ? 'Guardar Gasto' : 'Guardar Ingreso'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </>
+        }
       >
         {/* Toggle Gastos/Ingresos */}
         <FixedTransactionToggle 
@@ -621,31 +654,6 @@ export default function Home() {
           </View>
         )}
 
-        {/* Botones de acción */}
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity 
-            style={styles.cancelButton} 
-            onPress={closeModal}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[
-              styles.saveButton,
-              (isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)) 
-                ? styles.disabledButton 
-                : (isExpensesSelected ? styles.expenseButton : styles.incomeButton)
-            ]} 
-            onPress={handleGuardar}
-            activeOpacity={0.7}
-            disabled={isSaving || !valor_Titulo.trim() || !valor_Monto || (isExpensesSelected && !categoriaSeleccionada)}
-          >
-            <Text style={styles.saveButtonText}>
-              {isSaving ? 'Guardando...' : (isExpensesSelected ? 'Guardar Gasto' : 'Guardar Ingreso')}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollableTransactionForm>
 
       {/* Modal de Edición */}
@@ -754,18 +762,21 @@ const styles = StyleSheet.create({
   statCard: {
     alignItems: 'center',
     backgroundColor: Colors.backgroundCard,
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: Colors.border,
     minWidth: 80,
+    flex: 1,
   },
   statNumber: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: Colors.text,
     marginTop: 8,
     marginBottom: 4,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   statLabel: {
     fontSize: 12,
@@ -1037,6 +1048,85 @@ const styles = StyleSheet.create({
     shadowColor: '#666',
   },
   saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  // Fixed Action Buttons (igual que otros formularios)
+  fixedButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Safe area para iOS
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: 'row',
+    gap: 16,
+    shadowColor: Colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fixedCancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fixedCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  fixedSaveButton: {
+    flex: 2,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fixedExpenseButton: {
+    backgroundColor: Colors.danger,
+    shadowColor: Colors.danger,
+  },
+  fixedIncomeButton: {
+    backgroundColor: Colors.success,
+    shadowColor: Colors.success,
+  },
+  fixedDisabledButton: {
+    backgroundColor: Colors.textSecondary,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  fixedSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  fixedLoadingContainer: {
+    alignItems: 'center',
+  },
+  fixedLoadingText: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.white,

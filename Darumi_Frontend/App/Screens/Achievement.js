@@ -17,6 +17,8 @@ import { useUser } from '@clerk/clerk-react';
 import Colors from '../../assets/shared/Colors';
 import objectivesService from '../../services/graphql';
 import socketService from '../../services/socketService';
+import { formatCurrency } from '../../utils/formatting';
+import CustomObjectiveForm from '../Components/CustomObjectiveForm';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +31,7 @@ export default function Achievement() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [generatingObjectives, setGeneratingObjectives] = useState(false);
+  const [showCustomForm, setShowCustomForm] = useState(false);
   
   // Animaciones
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -79,7 +82,7 @@ export default function Achievement() {
       const transformedObjetivos = currentProgress.map(obj => ({
         id: obj.idRelacion,
         titulo: obj.titulo,
-        descripcion: `Meta: $${obj.valorObjetivo.toLocaleString()}`,
+        descripcion: `Meta: ${formatCurrency(obj.valorObjetivo)}`,
         estado: "En progreso",
         progreso: Math.min(100, Math.round((obj.valorActual / obj.valorObjetivo) * 100)),
         meta: obj.valorObjetivo,
@@ -97,7 +100,7 @@ export default function Achievement() {
         titulo: obj.titulo,
         descripcion: obj.status === 'Cumplido' 
           ? `¡Objetivo completado! Ganaste ${obj.puntos} puntos.`
-          : `Meta no cumplida. Objetivo: $${obj.targetValue?.toLocaleString() || 'N/A'}, Gastado: $${obj.finalValue?.toLocaleString() || 'N/A'}`,
+          : `Meta no cumplida. Objetivo: ${obj.targetValue ? formatCurrency(obj.targetValue) : 'N/A'}, Gastado: ${obj.finalValue ? formatCurrency(obj.finalValue) : 'N/A'}`,
         fechaObtenido: obj.fechaCompletado,
         puntos: obj.puntos,
         icono: obj.status === 'Cumplido' ? "trophy" : "times-circle",
@@ -163,7 +166,7 @@ export default function Achievement() {
       console.log('😞 Objective failed:', data);
       Alert.alert(
         'Objetivo no cumplido', 
-        `${data.title}: Tu meta era $${data.targetValue?.toLocaleString()}, pero gastaste $${data.finalValue?.toLocaleString()}.`,
+        `${data.title}: Tu meta era ${data.targetValue ? formatCurrency(data.targetValue) : 'N/A'}, pero gastaste ${data.finalValue ? formatCurrency(data.finalValue) : 'N/A'}.`,
         [{ text: 'Entendido', style: 'default' }]
       );
       
@@ -242,7 +245,7 @@ export default function Achievement() {
             {renderProgressBar(objetivo.progreso, objetivo.color)}
             <View style={styles.progressDetails}>
               <Text style={styles.progressAmount}>
-                ${objetivo.actual.toLocaleString()} / ${objetivo.meta.toLocaleString()}
+                {formatCurrency(objetivo.actual)} / {formatCurrency(objetivo.meta)}
               </Text>
             </View>
           </View>
@@ -344,7 +347,7 @@ export default function Achievement() {
       if (resultado.success) {
         Alert.alert(
           '🎉 ¡Objetivos Creados!',
-          `Se han generado ${resultado.objetivos.length} objetivos personalizados basados en tu dinero disponible de $${resultado.dineroDisponible.toLocaleString()}.`,
+          `Se han generado ${resultado.objetivos.length} objetivos personalizados basados en tu dinero disponible de ${formatCurrency(resultado.dineroDisponible)}.`,
           [
             { 
               text: '¡Genial!', 
@@ -456,7 +459,8 @@ export default function Achievement() {
                   <Text style={styles.emptyStateText}>No tienes objetivos en progreso</Text>
                   <Text style={styles.emptyStateSubtext}>¡Genera objetivos personalizados basados en tus ingresos!</Text>
                   
-                  <TouchableOpacity 
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
                     style={[styles.generateButton, generatingObjectives && styles.generateButtonDisabled]}
                     onPress={handleGenerateDefaultObjectives}
                     disabled={generatingObjectives}
@@ -470,9 +474,35 @@ export default function Achievement() {
                       {generatingObjectives ? 'Generando...' : 'Generar Objetivos'}
                     </Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.customButton}
+                    onPress={() => {
+                      console.log('🎯 Botón Crear Personalizado presionado');
+                      setShowCustomForm(true);
+                    }}
+                  >
+                    <FontAwesome5 name="plus" size={16} color={Colors.primary} />
+                    <Text style={styles.customButtonText}>Crear Personalizado</Text>
+                  </TouchableOpacity>
+                </View>
                 </View>
               ) : (
-                objetivos.map(renderObjectiveCard)
+                <View>
+                  {objetivos.map(renderObjectiveCard)}
+                  
+                  {/* Botón para crear objetivo adicional */}
+                  <TouchableOpacity
+                    style={[styles.customButton, { marginTop: 20, marginBottom: 20 }]}
+                    onPress={() => {
+                      console.log('🎯 Botón Crear Objetivo Adicional presionado');
+                      setShowCustomForm(true);
+                    }}
+                  >
+                    <FontAwesome5 name="plus" size={16} color={Colors.primary} />
+                    <Text style={styles.customButtonText}>Crear Objetivo Personalizado</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           )}
@@ -521,6 +551,17 @@ export default function Achievement() {
         <Text style={styles.celebrationText}>🎉 ¡FELICIDADES! 🎉</Text>
         <Text style={styles.celebrationSubtext}>¡Has completado un objetivo!</Text>
       </Animated.View>
+
+      {/* Custom Objective Form Modal */}
+      <CustomObjectiveForm
+        visible={showCustomForm}
+        onClose={() => setShowCustomForm(false)}
+        onSuccess={(objetivo) => {
+          console.log('Objetivo personalizado creado:', objetivo);
+          fetchData(); // Refresh data
+        }}
+        userIdentifier={user?.id}
+      />
     </View>
   );
 }
@@ -559,10 +600,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.primary,
     marginBottom: 4,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   statLabel: {
     fontSize: 12,
@@ -680,9 +723,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressAmount: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.text,
+    textAlign: 'center',
+    flexWrap: 'wrap',
   },
   completedSection: {
     flexDirection: 'row',
@@ -874,5 +919,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.white,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  customButton: {
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flex: 1,
+    gap: 8,
+  },
+  customButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });
