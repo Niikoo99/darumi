@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const BalanceProgressCard = ({ 
   balance, 
@@ -12,14 +13,14 @@ const BalanceProgressCard = ({
   const remainingMoney = availableMoney - spentMoney;
   
   const getBalanceColor = () => {
-    if (balance >= 0) return '#28a745';
-    return '#dc3545';
+    if (balance >= 0) return Colors.success;
+    return Colors.danger;
   };
 
   const getProgressColor = () => {
-    if (percentage <= 50) return '#28a745';
-    if (percentage <= 80) return '#ffc107';
-    return '#dc3545';
+    if (percentage <= 50) return Colors.success;
+    if (percentage <= 80) return Colors.warning;
+    return Colors.danger;
   };
 
   return (
@@ -61,11 +62,13 @@ const BalanceProgressCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundCard,
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 8,
@@ -80,13 +83,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 8,
     fontWeight: '500',
   },
   balanceAmount: {
     fontSize: 32,
     fontWeight: '700',
+    color: Colors.text,
   },
   progressSection: {
     marginTop: 8,
@@ -98,12 +102,12 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   progressValue: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '600',
   },
   progressBarContainer: {
@@ -111,7 +115,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 12,
-    backgroundColor: '#e9ecef',
+    backgroundColor: Colors.borderLight,
     borderRadius: 6,
     overflow: 'hidden',
   },
@@ -123,7 +127,7 @@ const styles = StyleSheet.create({
   remainingText: {
     textAlign: 'center',
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
 });

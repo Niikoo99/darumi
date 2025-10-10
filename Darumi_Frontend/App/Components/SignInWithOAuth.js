@@ -4,6 +4,7 @@ import { Button, Dimensions, Text, TouchableOpacity } from "react-native";
 import { useOAuth, useUser  } from "@clerk/clerk-expo";
 import { useWarmUpBrowser } from "../../hooks/warmUpBrowser";
 import Colors from "../../assets/shared/Colors";
+import { buildApiUrl } from "../../config/api";
 import axios from 'axios';
  
 WebBrowser.maybeCompleteAuthSession();
@@ -35,19 +36,25 @@ const SignInWithOAuth = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('🔐 Registrando usuario:', {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName
+      });
+      
       axios
-        .get(`http://192.168.1.131:3000/usuarios/${user.id}`, {
+        .post(buildApiUrl('/usuarios'), null, {
           params: {
-            apellido: user.lastName,
-            nombre: user.firstName,
-            identifier: user.id,
+            Apellido_usuario: user.lastName || '',
+            Nombre_usuario: user.firstName || '',
+            Identifier_usuario: user.id,
           },
         })
         .then((response) => {
-          console.log(response.data);
+          console.log('✅ Usuario registrado/actualizado:', response.data);
         })
         .catch((error) => {
-          console.error(error);
+          console.error('❌ Error registrando usuario:', error);
         });
     }
   }, [user]); // Add user as a dependency to the useEffect hook

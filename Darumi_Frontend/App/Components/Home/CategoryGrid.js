@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpense }) => {
   // Mapeo de categorías a iconos
@@ -19,24 +20,24 @@ const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpens
   const getCategoryColors = (isSelected) => {
     if (isExpense) {
       return {
-        backgroundColor: isSelected ? '#dc3545' : '#f8f9fa',
-        textColor: isSelected ? 'white' : '#1a1a1a',
-        iconColor: isSelected ? 'white' : '#dc3545',
-        borderColor: isSelected ? '#dc3545' : 'transparent'
+        backgroundColor: isSelected ? Colors.danger : Colors.backgroundSecondary,
+        textColor: isSelected ? Colors.white : Colors.text,
+        iconColor: isSelected ? Colors.white : Colors.danger,
+        borderColor: isSelected ? Colors.danger : Colors.borderLight
       };
     } else {
       return {
-        backgroundColor: isSelected ? '#28a745' : '#f8f9fa',
-        textColor: isSelected ? 'white' : '#1a1a1a',
-        iconColor: isSelected ? 'white' : '#28a745',
-        borderColor: isSelected ? '#28a745' : 'transparent'
+        backgroundColor: isSelected ? Colors.success : Colors.backgroundSecondary,
+        textColor: isSelected ? Colors.white : Colors.text,
+        iconColor: isSelected ? Colors.white : Colors.success,
+        borderColor: isSelected ? Colors.success : Colors.borderLight
       };
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Categoría</Text>
+      <Text style={styles.title}>🏷️ Categoría</Text>
       <View style={styles.grid}>
         {categories.map((category) => {
           const isSelected = selectedCategory === category.Id_categoria;
@@ -51,7 +52,7 @@ const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpens
                 {
                   backgroundColor: colors.backgroundColor,
                   borderColor: colors.borderColor,
-                  borderWidth: colors.borderColor !== 'transparent' ? 2 : 0
+                  borderWidth: 2
                 }
               ]}
               onPress={() => onCategorySelect(category.Id_categoria)}
@@ -59,7 +60,7 @@ const CategoryGrid = ({ categories, selectedCategory, onCategorySelect, isExpens
             >
               <View style={[
                 styles.iconContainer,
-                { backgroundColor: colors.iconColor === 'white' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)' }
+                { backgroundColor: colors.iconColor === Colors.white ? 'rgba(255,255,255,0.3)' : `${colors.iconColor}20` }
               ]}>
                 <FontAwesome5 
                   name={iconName} 
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: Colors.text,
     marginBottom: 16,
   },
   grid: {
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 2,

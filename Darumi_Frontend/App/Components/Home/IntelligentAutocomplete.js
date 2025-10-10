@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const IntelligentAutocomplete = ({ 
   value, 
@@ -100,7 +101,7 @@ const IntelligentAutocomplete = ({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor={Colors.textSecondary}
         autoCapitalize="none"
         returnKeyType="next"
       />
@@ -136,7 +137,7 @@ const IntelligentAutocomplete = ({
               onPress={handleSuggestionDismiss}
               style={styles.dismissButton}
             >
-              <FontAwesome5 name="times" size={14} color="#666" />
+              <FontAwesome5 name="times" size={14} color={Colors.textSecondary} />
             </TouchableOpacity>
           </TouchableOpacity>
         </Animated.View>
@@ -153,11 +154,11 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 16,
     borderWidth: 2,
-    borderColor: '#e9ecef',
+    borderColor: Colors.borderLight,
     borderRadius: 16,
     fontSize: 16,
-    backgroundColor: '#f8f9fa',
-    color: '#1a1a1a',
+    backgroundColor: Colors.backgroundSecondary,
+    color: Colors.textDark,
   },
   suggestionContainer: {
     marginTop: 8,
@@ -165,12 +166,12 @@ const styles = StyleSheet.create({
   suggestion: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: Colors.backgroundCard,
+    borderWidth: 2,
+    borderColor: Colors.border,
     borderRadius: 12,
     padding: 12,
-    shadowColor: '#000',
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#28a745',
+    backgroundColor: Colors.success,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -194,12 +195,12 @@ const styles = StyleSheet.create({
   suggestionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: Colors.text,
     marginBottom: 2,
   },
   suggestionSubtitle: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   dismissButton: {
     padding: 8,

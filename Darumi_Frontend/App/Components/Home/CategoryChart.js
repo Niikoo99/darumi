@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const CategoryChart = ({ categories = [] }) => {
   // Mapeo de categorías a iconos y colores
@@ -23,7 +24,7 @@ const CategoryChart = ({ categories = [] }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Top Categorías del Mes</Text>
+      <Text style={styles.title}>📊 Top Categorías del Mes</Text>
       
       <View style={styles.chartContainer}>
         {topCategories.map((category, index) => {
@@ -58,7 +59,7 @@ const CategoryChart = ({ categories = [] }) => {
         
         {topCategories.length === 0 && (
           <View style={styles.emptyState}>
-            <FontAwesome5 name="chart-bar" size={32} color="#ccc" />
+            <FontAwesome5 name="chart-bar" size={32} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>No hay datos para mostrar</Text>
           </View>
         )}
@@ -69,11 +70,13 @@ const CategoryChart = ({ categories = [] }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundCard,
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 8,
@@ -86,7 +89,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 20,
-    color: '#333',
+    color: Colors.text,
   },
   chartContainer: {
     gap: 12,
@@ -109,17 +112,17 @@ const styles = StyleSheet.create({
   chartCategory: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text,
     marginBottom: 2,
   },
   chartAmount: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   chartBar: {
     height: 8,
-    backgroundColor: '#e9ecef',
+    backgroundColor: Colors.borderLight,
     borderRadius: 4,
     overflow: 'hidden',
     width: 80,
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.textSecondary,
     marginTop: 8,
   },
 });

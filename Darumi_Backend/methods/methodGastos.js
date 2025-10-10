@@ -48,18 +48,38 @@ gastos.get('/gastos', (req, res) => {
 
   console.log(`API call: GET /gastos, User ID: ${userId}`);
 
-  const query = `SELECT G.Monto_gasto, G.Titulo_gasto, G.Detalle_gasto, G.Fecha_creacion_gasto, C.Nombre_categoria FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario INNER JOIN categorias C ON C.Id_categoria = G.Id_categoria WHERE U.Identifier_usuario = '${userId}' ORDER BY G.Fecha_creacion_gasto DESC`;
-  console.log(`Executing query: ${query}`);
+  if (!userId) {
+    console.error('Error: User ID is required');
+    return res.status(400).json({ error: 'User ID is required' });
+  }
 
-  connection.query(query, [userId], (error, results) => {
+  // Primero verificar si el usuario existe
+  connection.query('SELECT Id_usuario FROM usuarios WHERE Identifier_usuario = ?', [userId], (error, userResults) => {
     if (error) {
-      console.error('Error al ejecutar la consulta MySQL', error);
-      res.status(500).json({ error: 'Error de servidor' });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: 'Gasto no encontrado' });
-    } else {
-      res.json(results); 
+      console.error('Error verificando usuario:', error);
+      return res.status(500).json({ error: 'Error de servidor' });
     }
+    
+    if (userResults.length === 0) {
+      console.log(`Usuario ${userId} no encontrado en la base de datos`);
+      return res.status(404).json({ error: 'Usuario no encontrado. Por favor, inicia sesión nuevamente.' });
+    }
+    
+    console.log(`Usuario encontrado con ID interno: ${userResults[0].Id_usuario}`);
+    
+    // Ahora obtener los gastos
+    const query = `SELECT G.Monto_gasto, G.Titulo_gasto, G.Detalle_gasto, G.Fecha_creacion_gasto, C.Nombre_categoria FROM gastos G JOIN usuarios U ON U.Id_usuario = G.Id_usuario INNER JOIN categorias C ON C.Id_categoria = G.Categoria_gasto WHERE U.Identifier_usuario = ? ORDER BY G.Fecha_creacion_gasto DESC`;
+    console.log(`Executing query with user ID: ${userId}`);
+
+    connection.query(query, [userId], (error, results) => {
+      if (error) {
+        console.error('Error al ejecutar la consulta MySQL', error);
+        res.status(500).json({ error: 'Error de servidor' });
+      } else {
+        console.log(`Query successful, found ${results.length} gastos`);
+        res.json(results); 
+      }
+    });
   });
 });
 
@@ -79,7 +99,7 @@ gastos.post('/gastos', (req, res) => {
   // Realiza la inserción en la base de datos
   connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
     if (error) throw error;
-      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria, Id_usuario) VALUES (?, ?, ?, ?, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria], (error, results, fields) => {
+      connection.query('INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario) VALUES (?, ?, ?, ?, @idUser)', [Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria], (error, results, fields) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });
@@ -115,7 +135,7 @@ gastos.put('/gastos/:id', (req, res) => {
   // Realiza la actualización en la base de datos
   connection.query('SET @idUser = (SELECT Id_usuario FROM usuarios WHERE Identifier_Usuario = ?)', [Id_usuario], (error, results, fields) => {
       if (error) throw error;
-      connection.query('UPDATE gastos SET Monto_gasto = ?, Titulo_gasto = ?, Detalle_gasto = ?, Id_categoria = @idCategoria, Id_usuario = @idUser WHERE Id_gasto = ?', [Monto_gasto, Titulo_gasto, Detalle_gasto, gastoId], (error, results, fields) => {
+      connection.query('UPDATE gastos SET Monto_gasto = ?, Titulo_gasto = ?, Detalle_gasto = ?, Categoria_gasto = @idCategoria, Id_usuario = @idUser WHERE Id_gasto = ?', [Monto_gasto, Titulo_gasto, Detalle_gasto, gastoId], (error, results, fields) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });

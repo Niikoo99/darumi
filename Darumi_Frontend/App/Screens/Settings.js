@@ -1,26 +1,210 @@
-import { View, Text, Button, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Animated } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../assets/shared/Colors';
 
 // Import the app logo
 import appLogo from './../../assets/images/darumi.png';
 
 export default function Settings() {
     const { isLoaded, signOut } = useAuth();
+    
+    // Animaciones
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.9)).current;
+    const logoAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        // Animación de entrada
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                tension: 50,
+                friction: 7,
+                useNativeDriver: true,
+            }),
+            Animated.timing(logoAnim, {
+                toValue: 1,
+                duration: 1200,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const handleSignOut = () => {
+        Animated.timing(fadeAnim, {
+            toValue: 0.5,
+            duration: 200,
+            useNativeDriver: true,
+        }).start(() => {
+            signOut();
+        });
+    };
+
+    const settingsOptions = [
+        {
+            id: 'profile',
+            title: 'Perfil',
+            subtitle: 'Gestiona tu información personal',
+            icon: 'user',
+            color: Colors.primary,
+        },
+        {
+            id: 'notifications',
+            title: 'Notificaciones',
+            subtitle: 'Configura las alertas de la app',
+            icon: 'bell',
+            color: Colors.warning,
+        },
+        {
+            id: 'privacy',
+            title: 'Privacidad',
+            subtitle: 'Controla tu privacidad y seguridad',
+            icon: 'shield-alt',
+            color: Colors.success,
+        },
+        {
+            id: 'backup',
+            title: 'Respaldo',
+            subtitle: 'Respalda y restaura tus datos',
+            icon: 'cloud-upload-alt',
+            color: '#2196F3',
+        },
+        {
+            id: 'help',
+            title: 'Ayuda',
+            subtitle: 'Centro de ayuda y soporte',
+            icon: 'question-circle',
+            color: '#9C27B0',
+        },
+    ];
+
+    const renderSettingOption = ({ item }) => (
+        <Animated.View
+            style={[
+                styles.settingCard,
+                {
+                    transform: [{ scale: scaleAnim }],
+                    opacity: fadeAnim,
+                },
+            ]}
+        >
+            <TouchableOpacity style={styles.settingContent} activeOpacity={0.8}>
+                <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
+                    <FontAwesome5 name={item.icon} size={20} color={item.color} />
+                </View>
+                <View style={styles.settingInfo}>
+                    <Text style={styles.settingTitle}>{item.title}</Text>
+                    <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+                </View>
+                <FontAwesome5 name="chevron-right" size={16} color={Colors.textSecondary} />
+            </TouchableOpacity>
+        </Animated.View>
+    );
+
     return (
         <View style={styles.container}>
-            <View style={styles.upperSection}>
-                <Text style={styles.header}>Configuración</Text>
-                <Button title='Cerrar sesión' onPress={() => signOut()} style={styles.signOutButton} />
+            {/* Header Gamificado */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>⚙️ Configuración</Text>
+                <Text style={styles.headerSubtitle}>Personaliza tu experiencia</Text>
             </View>
-            <Image source={appLogo} style={styles.logo} />
-            <View style={styles.lowerSection}>
-                <Text style={styles.header}>Acerca de</Text>
-                <Text style={styles.aboutText}>
-                  Acá va a estar la info de la app, pero todavia no tenemos el texto
-                  así que lo mejor que puedo ofrecer es este placeholder
-                </Text>
-            </View>
+
+            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <View style={styles.content}>
+                    {/* Logo y Info de la App */}
+                    <Animated.View
+                        style={[
+                            styles.logoSection,
+                            {
+                                transform: [{ scale: logoAnim }],
+                                opacity: logoAnim,
+                            },
+                        ]}
+                    >
+                        <Image source={appLogo} style={styles.logo} />
+                        <Text style={styles.appName}>Darumi</Text>
+                        <Text style={styles.appVersion}>Versión 1.0.0</Text>
+                        <Text style={styles.appDescription}>
+                            Tu compañero inteligente para el control financiero personal.
+                            Gestiona tus gastos, ahorra dinero y alcanza tus objetivos financieros.
+                        </Text>
+                    </Animated.View>
+
+                    {/* Opciones de Configuración */}
+                    <View style={styles.settingsSection}>
+                        <Text style={styles.sectionTitle}>Configuración</Text>
+                        {settingsOptions.map((option) => (
+                            <Animated.View
+                                key={option.id}
+                                style={[
+                                    styles.settingCard,
+                                    {
+                                        transform: [{ scale: scaleAnim }],
+                                        opacity: fadeAnim,
+                                    },
+                                ]}
+                            >
+                                <TouchableOpacity style={styles.settingContent} activeOpacity={0.8}>
+                                    <View style={[styles.iconContainer, { backgroundColor: `${option.color}20` }]}>
+                                        <FontAwesome5 name={option.icon} size={20} color={option.color} />
+                                    </View>
+                                    <View style={styles.settingInfo}>
+                                        <Text style={styles.settingTitle}>{option.title}</Text>
+                                        <Text style={styles.settingSubtitle}>{option.subtitle}</Text>
+                                    </View>
+                                    <FontAwesome5 name="chevron-right" size={16} color={Colors.textSecondary} />
+                                </TouchableOpacity>
+                            </Animated.View>
+                        ))}
+                    </View>
+
+                    {/* Estadísticas de la App */}
+                    <View style={styles.statsSection}>
+                        <Text style={styles.sectionTitle}>Estadísticas</Text>
+                        <View style={styles.statsGrid}>
+                            <View style={styles.statCard}>
+                                <Text style={styles.statNumber}>45</Text>
+                                <Text style={styles.statLabel}>Días usando</Text>
+                            </View>
+                            <View style={styles.statCard}>
+                                <Text style={styles.statNumber}>127</Text>
+                                <Text style={styles.statLabel}>Transacciones</Text>
+                            </View>
+                            <View style={styles.statCard}>
+                                <Text style={styles.statNumber}>8</Text>
+                                <Text style={styles.statLabel}>Objetivos</Text>
+                            </View>
+                            <View style={styles.statCard}>
+                                <Text style={styles.statNumber}>1,250</Text>
+                                <Text style={styles.statLabel}>Puntos</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Botón de Cerrar Sesión */}
+                    <Animated.View
+                        style={[
+                            styles.signOutSection,
+                            {
+                                transform: [{ scale: scaleAnim }],
+                                opacity: fadeAnim,
+                            },
+                        ]}
+                    >
+                        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+                            <FontAwesome5 name="sign-out-alt" size={20} color={Colors.white} />
+                            <Text style={styles.signOutText}>Cerrar Sesión</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            </ScrollView>
         </View>
     );
 }
@@ -28,36 +212,151 @@ export default function Settings() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    upperSection: {
-        position: 'absolute',
-        top: 40,
-        paddingHorizontal: 20,
-    },
-    lowerSection: {
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    logo: {
-        width: 150,
-        height: 150,
-        marginBottom: 20,
+        backgroundColor: Colors.background,
     },
     header: {
+        backgroundColor: Colors.primary,
+        padding: 20,
+        alignItems: 'center',
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+    },
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: '800',
+        color: Colors.textDark,
+        marginBottom: 8,
+    },
+    headerSubtitle: {
+        fontSize: 16,
+        color: Colors.textDark,
+        opacity: 0.8,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    content: {
+        padding: 20,
+    },
+    logoSection: {
+        alignItems: 'center',
+        backgroundColor: Colors.backgroundCard,
+        borderWidth: 2,
+        borderColor: Colors.primary,
+        borderRadius: 20,
+        padding: 30,
+        marginBottom: 24,
+    },
+    logo: {
+        width: 120,
+        height: 120,
+        marginBottom: 16,
+    },
+    appName: {
+        fontSize: 32,
+        fontWeight: '800',
+        color: Colors.primary,
+        marginBottom: 8,
+    },
+    appVersion: {
+        fontSize: 16,
+        color: Colors.textSecondary,
+        marginBottom: 16,
+    },
+    appDescription: {
+        fontSize: 14,
+        color: Colors.textSecondary,
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+    settingsSection: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: Colors.primary,
+        marginBottom: 16,
+    },
+    settingCard: {
+        backgroundColor: Colors.backgroundCard,
+        borderWidth: 2,
+        borderColor: Colors.border,
+        borderRadius: 16,
+        marginBottom: 12,
+        overflow: 'hidden',
+    },
+    settingContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 20,
+    },
+    iconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    settingInfo: {
+        flex: 1,
+    },
+    settingTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: Colors.text,
+        marginBottom: 4,
+    },
+    settingSubtitle: {
+        fontSize: 14,
+        color: Colors.textSecondary,
+    },
+    statsSection: {
+        marginBottom: 24,
+    },
+    statsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    statCard: {
+        backgroundColor: Colors.backgroundCard,
+        borderWidth: 2,
+        borderColor: Colors.border,
+        borderRadius: 16,
+        padding: 20,
+        alignItems: 'center',
+        width: '48%',
+        marginBottom: 12,
+    },
+    statNumber: {
         fontSize: 24,
-        marginBottom: 20,
+        fontWeight: '700',
+        color: Colors.primary,
+        marginBottom: 4,
+    },
+    statLabel: {
+        fontSize: 12,
+        color: Colors.textSecondary,
+        textAlign: 'center',
+    },
+    signOutSection: {
+        marginTop: 20,
     },
     signOutButton: {
-        borderRadius: 10,
-        backgroundColor: '#007bff', // Blue color for the button
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        backgroundColor: Colors.danger,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        gap: 8,
     },
-    aboutText: {
-        textAlign: 'center',
-        marginHorizontal: 20,
+    signOutText: {
         fontSize: 16,
+        fontWeight: '600',
+        color: Colors.white,
     },
 });

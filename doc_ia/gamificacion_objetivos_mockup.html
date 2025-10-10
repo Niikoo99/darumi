@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darumi - Gamificación de Objetivos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #121113 0%, #222725 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: #121113;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFE900 0%, #FFD700 100%);
+            padding: 20px;
+            text-align: center;
+            color: #121113;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFE900;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .content {
+            padding: 0 20px 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '🎯';
+            font-size: 24px;
+        }
+
+        /* Objetivos en Progreso */
+        .objective-card {
+            background: linear-gradient(135deg, rgba(255, 233, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 2px solid rgba(255, 233, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .objective-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #FFE900 0%, #FFD700 50%, #FFE900 100%);
+            animation: progress-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes progress-glow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .objective-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .objective-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFE900;
+            flex: 1;
+        }
+
+        .objective-status {
+            background: rgba(255, 233, 0, 0.2);
+            color: #FFE900;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .objective-description {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .progress-container {
+            margin-bottom: 12px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFE900 0%, #FFD700 100%);
+            border-radius: 4px;
+            transition: width 0.8s ease-in-out;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            animation: progress-shine 2s ease-in-out infinite;
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .objective-reward {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #FFE900;
+        }
+
+        .reward-icon {
+            font-size: 16px;
+        }
+
+        /* Objetivo Cumplido con Celebración */
+        .objective-completed {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(25, 135, 84, 0.1) 100%);
+            border: 2px solid rgba(40, 167, 69, 0.5);
+            animation: celebration-pulse 1s ease-in-out;
+        }
+
+        @keyframes celebration-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .celebration-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #FFE900;
+            animation: confetti-fall 3s ease-in-out infinite;
+        }
+
+        .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background: #FFE900; }
+        .confetti:nth-child(2) { left: 20%; animation-delay: 0.2s; background: #FF6B6B; }
+        .confetti:nth-child(3) { left: 30%; animation-delay: 0.4s; background: #4ECDC4; }
+        .confetti:nth-child(4) { left: 40%; animation-delay: 0.6s; background: #45B7D1; }
+        .confetti:nth-child(5) { left: 50%; animation-delay: 0.8s; background: #96CEB4; }
+        .confetti:nth-child(6) { left: 60%; animation-delay: 1s; background: #FFEAA7; }
+        .confetti:nth-child(7) { left: 70%; animation-delay: 1.2s; background: #DDA0DD; }
+        .confetti:nth-child(8) { left: 80%; animation-delay: 1.4s; background: #98D8C8; }
+        .confetti:nth-child(9) { left: 90%; animation-delay: 1.6s; background: #F7DC6F; }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(200px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .completed-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .completed-badge::before {
+            content: '✓';
+            font-size: 14px;
+        }
+
+        /* Objetivo Fallido */
+        .objective-failed {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(200, 35, 51, 0.05) 100%);
+            border: 2px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .failed-badge {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .failed-badge::before {
+            content: '⚠';
+            font-size: 14px;
+        }
+
+        .failure-reason {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .failure-reason-title {
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 4px;
+        }
+
+        /* Historial de Logros */
+        .achievements-section {
+            margin-top: 32px;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .achievement-card {
+            background: linear-gradient(135deg, rgba(255, 233, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 2px solid rgba(255, 233, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 233, 0, 0.1) 0%, transparent 70%);
+            animation: achievement-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes achievement-glow {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+
+        .achievement-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .achievement-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFE900;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .achievement-description {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .achievement-points {
+            background: rgba(255, 233, 0, 0.2);
+            color: #FFE900;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navegación */
+        .tab-navigation {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: rgba(34, 39, 37, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 233, 0, 0.2);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #899878;
+            font-size: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .tab-item.active {
+            color: #FFE900;
+        }
+
+        .tab-icon {
+            font-size: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animaciones adicionales */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Mis Objetivos</h1>
+            <p>¡Conquista tus metas financieras!</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Activos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1,250</div>
+                <div class="stat-label">Puntos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">7</div>
+                <div class="stat-label">Logros</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Objetivos en Progreso -->
+            <div class="section-title">Objetivos Activos</div>
+            
+            <!-- Objetivo en Progreso -->
+            <div class="objective-card fade-in">
+                <div class="objective-header">
+                    <div class="objective-title">Reducir gastos en Entretenimiento</div>
+                    <div class="objective-status">En Progreso</div>
+                </div>
+                <div class="objective-description">
+                    Mantén tus gastos en entretenimiento por debajo de $5,000 este mes
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>$3,200 gastado</span>
+                        <span>$5,000 límite</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 64%"></div>
+                    </div>
+                </div>
+                <div class="objective-reward">
+                    <span class="reward-icon">⭐</span>
+                    <span>Recompensa: 150 puntos</span>
+                </div>
+            </div>
+
+            <!-- Objetivo Cumplido con Celebración -->
+            <div class="objective-card objective-completed slide-up">
+                <div class="celebration-overlay">
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                    <div class="confetti"></div>
+                </div>
+                <div class="objective-header">
+                    <div class="objective-title">Ahorro Mensual</div>
+                    <div class="completed-badge">¡Completado!</div>
+                </div>
+                <div class="objective-description">
+                    Ahorra $2,000 este mes para tu fondo de emergencia
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>$2,150 ahorrado</span>
+                        <span>$2,000 meta</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="objective-reward">
+                    <span class="reward-icon">🏆</span>
+                    <span>¡Ganaste 200 puntos!</span>
+                </div>
+            </div>
+
+            <!-- Objetivo Fallido -->
+            <div class="objective-card objective-failed fade-in">
+                <div class="objective-header">
+                    <div class="objective-title">Gastos en Comida</div>
+                    <div class="failed-badge">Fallido</div>
+                </div>
+                <div class="objective-description">
+                    Mantén tus gastos en comida por debajo de $3,000 este mes
+                </div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>$3,450 gastado</span>
+                        <span>$3,000 límite</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 115%; background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);"></div>
+                    </div>
+                </div>
+                <div class="failure-reason">
+                    <div class="failure-reason-title">¿Por qué falló?</div>
+                    <div>Excediste el límite en $450. Los gastos en restaurantes fueron más altos de lo esperado. Intenta planificar mejor tus comidas para el próximo mes.</div>
+                </div>
+            </div>
+
+            <!-- Historial de Logros -->
+            <div class="achievements-section">
+                <div class="section-title">🏆 Mis Logros</div>
+                
+                <div class="achievements-grid">
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">💰</div>
+                        <div class="achievement-title">Primer Ahorro</div>
+                        <div class="achievement-description">Ahorra tu primer $1,000</div>
+                        <div class="achievement-points">+100 pts</div>
+                    </div>
+                    
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-title">Objetivo Cumplido</div>
+                        <div class="achievement-description">Completa tu primer objetivo</div>
+                        <div class="achievement-points">+50 pts</div>
+                    </div>
+                    
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">📈</div>
+                        <div class="achievement-title">Consistencia</div>
+                        <div class="achievement-description">3 meses consecutivos ahorrando</div>
+                        <div class="achievement-points">+200 pts</div>
+                    </div>
+                    
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">💎</div>
+                        <div class="achievement-title">Gran Ahorrador</div>
+                        <div class="achievement-description">Ahorra $10,000 en total</div>
+                        <div class="achievement-points">+500 pts</div>
+                    </div>
+                    
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">🔥</div>
+                        <div class="achievement-title">Racha de Éxito</div>
+                        <div class="achievement-description">5 objetivos cumplidos seguidos</div>
+                        <div class="achievement-points">+300 pts</div>
+                    </div>
+                    
+                    <div class="achievement-card fade-in">
+                        <div class="achievement-icon">⭐</div>
+                        <div class="achievement-title">Estrella</div>
+                        <div class="achievement-description">Alcanza 1,000 puntos</div>
+                        <div class="achievement-points">+100 pts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <div class="tab-item">
+                <div class="tab-icon">🏠</div>
+                <div>Inicio</div>
+            </div>
+            <div class="tab-item">
+                <div class="tab-icon">💳</div>
+                <div>Pagos</div>
+            </div>
+            <div class="tab-item active">
+                <div class="tab-icon">🎯</div>
+                <div>Objetivos</div>
+            </div>
+            <div class="tab-item">
+                <div class="tab-icon">⚙️</div>
+                <div>Config</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simular animaciones de progreso
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animar barras de progreso
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 500);
+            });
+
+            // Simular confetti para objetivos completados
+            const completedCards = document.querySelectorAll('.objective-completed');
+            completedCards.forEach(card => {
+                setTimeout(() => {
+                    card.style.animation = 'celebration-pulse 1s ease-in-out';
+                }, 1000);
+            });
+
+            // Efecto de hover en tarjetas de logros
+            const achievementCards = document.querySelectorAll('.achievement-card');
+            achievementCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

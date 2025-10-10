@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const QuickActions = ({ onAddExpense, onAddIncome }) => {
   return (
@@ -11,9 +12,9 @@ const QuickActions = ({ onAddExpense, onAddIncome }) => {
         activeOpacity={0.7}
       >
         <View style={[styles.actionIcon, styles.expenseIcon]}>
-          <FontAwesome5 name="money-bill-wave" size={24} color="#4caf50" />
+          <FontAwesome5 name="money-bill-wave" size={24} color={Colors.danger} />
         </View>
-        <Text style={styles.actionText}>Nuevo Gasto</Text>
+        <Text style={styles.actionText}>💸 Nuevo Gasto</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
@@ -22,9 +23,9 @@ const QuickActions = ({ onAddExpense, onAddIncome }) => {
         activeOpacity={0.7}
       >
         <View style={[styles.actionIcon, styles.incomeIcon]}>
-          <FontAwesome5 name="hand-holding-usd" size={24} color="#ff9800" />
+          <FontAwesome5 name="hand-holding-usd" size={24} color={Colors.success} />
         </View>
-        <Text style={styles.actionText}>Nuevo Ingreso</Text>
+        <Text style={styles.actionText}>💰 Nuevo Ingreso</Text>
       </TouchableOpacity>
     </View>
   );
@@ -38,11 +39,13 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundCard,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -53,11 +56,11 @@ const styles = StyleSheet.create({
   },
   expenseButton: {
     borderLeftWidth: 4,
-    borderLeftColor: '#dc3545',
+    borderLeftColor: Colors.danger,
   },
   incomeButton: {
     borderLeftWidth: 4,
-    borderLeftColor: '#28a745',
+    borderLeftColor: Colors.success,
   },
   actionIcon: {
     width: 48,
@@ -66,18 +69,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-    backgroundColor: '#f8f9fa',
   },
   expenseIcon: {
-    backgroundColor: '#e8f5e8',
+    backgroundColor: `${Colors.danger}20`,
   },
   incomeIcon: {
-    backgroundColor: '#fff3e0',
+    backgroundColor: `${Colors.success}20`,
   },
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text,
     textAlign: 'center',
   },
 });

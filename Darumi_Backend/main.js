@@ -10,7 +10,7 @@ const cors = require('cors');
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:3000', // Add your frontend url here
+  origin: '*', // Permitir cualquier origen durante desarrollo
   allowedHeaders: 'Origin, X-Api-Key, X-Requested-With, Content-Type, Accept, Authorization',
   methods: 'POST, PUT, PATCH, GET, DELETE, OPTIONS', // Add the allowed methods here
     

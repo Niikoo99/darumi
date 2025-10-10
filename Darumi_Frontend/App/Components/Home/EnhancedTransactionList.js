@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction }) => {
   // Mapeo de categorías a iconos y colores
@@ -77,7 +78,7 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Transacciones Recientes</Text>
+        <Text style={styles.title}>📋 Transacciones Recientes</Text>
         <TouchableOpacity>
           <Text style={styles.viewAllText}>Ver todas</Text>
         </TouchableOpacity>
@@ -92,11 +93,13 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundCard,
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 8,
@@ -114,11 +117,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text,
   },
   viewAllText: {
     fontSize: 14,
-    color: '#27A9E1',
+    color: Colors.primary,
     fontWeight: '500',
   },
   transactionList: {
@@ -127,9 +130,13 @@ const styles = StyleSheet.create({
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   transactionIcon: {
     width: 48,
@@ -146,7 +153,7 @@ const styles = StyleSheet.create({
   transactionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text,
     marginBottom: 4,
   },
   transactionMeta: {
@@ -156,16 +163,16 @@ const styles = StyleSheet.create({
   },
   transactionCategory: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   transactionDate: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textSecondary,
   },
   transactionDetail: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textSecondary,
     fontStyle: 'italic',
   },
   transactionAmount: {
@@ -176,10 +183,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   expenseAmount: {
-    color: '#dc3545',
+    color: Colors.danger,
   },
   incomeAmount: {
-    color: '#28a745',
+    color: Colors.success,
   },
 });
 

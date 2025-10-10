@@ -58,29 +58,49 @@ usuarios.get('/usuarios/:id', (req, res) => {
 
 // POST nuevo usuario
 usuarios.post('/usuarios', (req, res) => {
-  console.log('POST /usuarios with body', req.body);
-  // Obtén los datos del nuevo usuario desde el cuerpo de la solicitud
-  //const { id, apellido, nombre, email } = req.body;
+  console.log('POST /usuarios with query params', req.query);
+  // Obtén los datos del nuevo usuario desde los query parameters
   const apellido = req.query["Apellido_usuario"];
   const nombre = req.query["Nombre_usuario"];
   const identifier = req.query["Identifier_usuario"];
 
+  console.log(`Creating user: ${nombre} ${apellido} (${identifier})`);
+
+  if (!identifier) {
+    console.error('Error: Identifier_usuario is required');
+    return res.status(400).json({ error: 'Identifier_usuario is required' });
+  }
 
   // Chequea que el usuario no exista en la base de datos
   connection.query('SELECT * FROM usuarios WHERE Identifier_usuario = ?', [identifier], (error, results) => {
     if (error) {
       console.error('Error al ejecutar la consulta MySQL', error);
       res.status(500).json({ error: 'Error de servidor' });
-    } else if (results.length = 0) {
-      connection.query('INSERT INTO usuarios (Apellido_usuario, Nombre_usuario, Identifier_usuario) VALUES (?, ?, ?)', [apellido, nombre, identifier], (error, results) => {
+    } else if (results.length === 0) {
+      // Usuario no existe, crear nuevo
+      console.log('Usuario no encontrado, creando nuevo usuario');
+      connection.query('INSERT INTO usuarios (Apellido_usuario, Nombre_usuario, Identifier_usuario) VALUES (?, ?, ?)', [apellido || '', nombre || '', identifier], (error, results) => {
         if (error) {
           console.error('Error al ejecutar la consulta MySQL', error);
           res.status(500).json({ error: 'Error de servidor' });
         } else {
-          // Devuelve el ID del usuario recién creado
-          //res.json({ id: results.insertId, apellido, nombre, email });
-          res.json({ id, apellido, nombre, email });
+          console.log('Usuario creado exitosamente con ID:', results.insertId);
+          res.json({ 
+            id: results.insertId, 
+            apellido: apellido || '', 
+            nombre: nombre || '', 
+            identifier: identifier 
+          });
         }
+      });
+    } else {
+      // Usuario ya existe
+      console.log('Usuario ya existe:', results[0]);
+      res.json({ 
+        id: results[0].Id_usuario, 
+        apellido: results[0].Apellido_usuario, 
+        nombre: results[0].Nombre_usuario, 
+        identifier: results[0].Identifier_usuario 
       });
     }
   });

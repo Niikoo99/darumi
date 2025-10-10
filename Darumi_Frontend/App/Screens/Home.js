@@ -1,5 +1,5 @@
 import { View, Text, Button, Modal, TextInput, StyleSheet, TouchableOpacity, ScrollView, Animated  } from 'react-native';
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
 import Header from '../Components/Home/Header';
 import CategoryGrid from '../Components/Home/CategoryGrid';
@@ -15,6 +15,8 @@ import FloatingAddButton from '../Components/Home/FloatingAddButton';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../assets/shared/Colors';
+import { buildApiUrl, getEndpoints, testConnection } from '../../config/api';
 
 export default function Home() {
   
@@ -31,6 +33,7 @@ export default function Home() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState('');
   const {isSignedIn, user} = useUser();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -49,14 +52,45 @@ export default function Home() {
   
   // Estados para animaciones
   const [modalAnimation] = useState(new Animated.Value(0));
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    // Animación de entrada
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       if (isSignedIn) {
         setLoading(true);
         try {
+          console.log('🚀 Iniciando fetch de datos...');
+          console.log('👤 Usuario:', user.id);
+          
           // Fetch categories
-          const categoriesResponse = await axios.get(`http://192.168.1.131:3000/categorias/`);
+          const categoriesUrl = buildApiUrl(getEndpoints().CATEGORIES + '/');
+          console.log('📂 Fetching categories from:', categoriesUrl);
+          const categoriesResponse = await axios.get(categoriesUrl);
+          console.log('✅ Categories response:', categoriesResponse.data);
           setData(categoriesResponse.data);
 
           // Find the category with Nombre_categoria "Ingresos" and store its Id_categoria
@@ -66,7 +100,7 @@ export default function Home() {
           }
 
           // Fetch transactions
-          const transactionsResponse = await axios.get(`http://192.168.1.131:3000/gastos/`, { 
+          const transactionsResponse = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { 
             params: { Id_Usuario: user.id } 
           });
           setTransactions(transactionsResponse.data);
@@ -115,14 +149,31 @@ export default function Home() {
           setCategoryData(categoryArray);
 
         } catch (error) {
+          console.error('❌ Error fetching data:', error);
+          console.error('❌ Error details:', {
+            message: error.message,
+            code: error.code,
+            response: error.response?.data,
+            status: error.response?.status,
+            url: error.config?.url
+          });
           setError(error);
+          setDebugInfo(`❌ Error: ${error.message}`);
         } finally {
           setLoading(false);
         }
       }
     };
 
-    fetchData();
+    // Probar conexión primero
+    testConnection().then(isConnected => {
+      const connectionStatus = isConnected ? '✅ OK' : '❌ FALLO';
+      console.log('🔌 Conexión con backend:', connectionStatus);
+      setDebugInfo(`🔌 Conexión: ${connectionStatus}`);
+      if (isConnected) {
+        fetchData();
+      }
+    });
   }, [isSignedIn, user]);
 
   const handleGuardar = () => {
@@ -138,7 +189,7 @@ export default function Home() {
     });
 
     axios
-      .post('http://192.168.1.131:3000/gastos', {
+      .post(buildApiUrl(getEndpoints().GASTOS), {
         Monto_gasto,
         Id_categoria: auxIdCategory,
         Titulo_gasto: valor_Titulo,
@@ -169,7 +220,7 @@ export default function Home() {
       setLoading(true);
       try {
         // Fetch categories
-        const categoriesResponse = await axios.get(`http://192.168.1.131:3000/categorias/`);
+        const categoriesResponse = await axios.get(buildApiUrl(getEndpoints().CATEGORIES + '/'));
         setData(categoriesResponse.data);
 
         // Find the category with Nombre_categoria "Ingresos" and store its Id_categoria
@@ -179,7 +230,7 @@ export default function Home() {
         }
 
         // Fetch transactions
-        const transactionsResponse = await axios.get(`http://192.168.1.131:3000/gastos/`, { 
+        const transactionsResponse = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { 
           params: { Id_Usuario: user.id } 
         });
         setTransactions(transactionsResponse.data);
@@ -328,44 +379,142 @@ export default function Home() {
 
   const filteredData = data.filter(item => item.Nombre_categoria !== 'Ingresos');  
 
+  const renderStats = () => (
+    <Animated.View
+      style={[
+        styles.statsContainer,
+        {
+          transform: [{ scale: scaleAnim }],
+          opacity: fadeAnim,
+        },
+      ]}
+    >
+      <View style={styles.statCard}>
+        <FontAwesome5 name="chart-line" size={20} color={Colors.primary} />
+        <Text style={styles.statNumber}>${financialData.balance.toLocaleString()}</Text>
+        <Text style={styles.statLabel}>Balance</Text>
+      </View>
+      <View style={styles.statCard}>
+        <FontAwesome5 name="arrow-down" size={20} color={Colors.danger} />
+        <Text style={styles.statNumber}>${financialData.totalExpenses.toLocaleString()}</Text>
+        <Text style={styles.statLabel}>Gastos</Text>
+      </View>
+      <View style={styles.statCard}>
+        <FontAwesome5 name="arrow-up" size={20} color={Colors.success} />
+        <Text style={styles.statNumber}>${financialData.totalIncome.toLocaleString()}</Text>
+        <Text style={styles.statLabel}>Ingresos</Text>
+      </View>
+    </Animated.View>
+  );
+
   return (
     <View style={styles.container}>
-      <Header />
+      {/* Debug Info */}
+      {debugInfo && (
+        <View style={styles.debugContainer}>
+          <Text style={styles.debugText}>{debugInfo}</Text>
+        </View>
+      )}
       
+      {/* Header Gamificado */}
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            transform: [{ translateY: slideAnim }],
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        <Text style={styles.headerTitle}>🏠 Dashboard</Text>
+        <Text style={styles.headerSubtitle}>Tu resumen financiero personal</Text>
+        {user && (
+          <Text style={styles.welcomeText}>¡Hola, {user.firstName || 'Usuario'}!</Text>
+        )}
+      </Animated.View>
+      
+      {/* Stats Bar */}
+      {renderStats()}
+
       <ScrollView 
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Balance Progress Card */}
-        <BalanceProgressCard
-          balance={financialData.balance}
-          availableMoney={financialData.availableMoney}
-          spentMoney={financialData.totalExpenses}
-        />
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <BalanceProgressCard
+            balance={financialData.balance}
+            availableMoney={financialData.availableMoney}
+            spentMoney={financialData.totalExpenses}
+          />
+        </Animated.View>
 
         {/* Financial Summary Cards */}
-        <FinancialSummaryCards
-          expenses={financialData.totalExpenses}
-          income={financialData.totalIncome}
-          balance={financialData.balance}
-        />
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <FinancialSummaryCards
+            expenses={financialData.totalExpenses}
+            income={financialData.totalIncome}
+            balance={financialData.balance}
+          />
+        </Animated.View>
 
         {/* Quick Actions */}
-        <QuickActions
-          onAddExpense={handleQuickAddExpense}
-          onAddIncome={handleQuickAddIncome}
-        />
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <QuickActions
+            onAddExpense={handleQuickAddExpense}
+            onAddIncome={handleQuickAddIncome}
+          />
+        </Animated.View>
 
         {/* Category Chart */}
-        <CategoryChart categories={categoryData} />
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <CategoryChart categories={categoryData} />
+        </Animated.View>
 
         {/* Enhanced Transaction List */}
-        <EnhancedTransactionList
-          transactions={transactions}
-          onTransactionPress={(transaction) => console.log('Transaction pressed:', transaction)}
-          onEditTransaction={handleEditItem}
-        />
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <EnhancedTransactionList
+            transactions={transactions}
+            onTransactionPress={(transaction) => console.log('Transaction pressed:', transaction)}
+            onEditTransaction={handleEditItem}
+          />
+        </Animated.View>
       </ScrollView>
 
       {/* Floating Add Button */}
@@ -373,6 +522,8 @@ export default function Home() {
         onPress={openModal}
         isExpense={isExpensesSelected}
       />
+      
+      {/* Modal Principal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -394,10 +545,13 @@ export default function Home() {
               }
             ]}
           >
+            {/* Indicador superior */}
+            <View style={styles.modalIndicator} />
+            
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {isExpensesSelected ? 'Nuevo Gasto' : 'Nuevo Ingreso'}
+                {isExpensesSelected ? '💸 Nuevo Gasto' : '💰 Nuevo Ingreso'}
               </Text>
               <Text style={styles.modalSubtitle}>
                 Registra tu transacción rápidamente
@@ -425,7 +579,7 @@ export default function Home() {
               placeholder="Detalle adicional (opcional)"
               value={valor_Detalle}
               onChangeText={setValorDetalle}
-              placeholderTextColor="#999"
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={2}
             />
@@ -471,6 +625,8 @@ export default function Home() {
           </Animated.View>
         </View>
       </Modal>
+
+      {/* Modal de Edición */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -478,16 +634,31 @@ export default function Home() {
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-          <Text style={styles.modalHeader}>Editar balance</Text>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                transform: [{ scale: scaleAnim }],
+                opacity: fadeAnim,
+              },
+            ]}
+          >
+            {/* Indicador superior */}
+            <View style={styles.modalIndicator} />
+            
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>✏️ Editar Transacción</Text>
+              <Text style={styles.modalSubtitle}>Modifica los detalles de tu transacción</Text>
+            </View>
+            
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Titulo"
+                placeholder="Título"
                 keyboardType="default"
                 value={editedTitle}
                 onChangeText={(text) => setEditedTitle(text)}
-                placeholderTextColor="#333" // Color del texto de placeholder                
+                placeholderTextColor={Colors.textSecondary}
               />
               <TextInput
                 style={styles.input}
@@ -495,7 +666,7 @@ export default function Home() {
                 keyboardType="default"
                 value={editedDetail}
                 onChangeText={(text) => setEditedDetail(text)}
-                placeholderTextColor="#333" // Color del texto de placeholder
+                placeholderTextColor={Colors.textSecondary}
               />
               <TextInput
                 style={styles.input}
@@ -503,8 +674,7 @@ export default function Home() {
                 keyboardType="numeric"
                 value={editedAmount.toString()}
                 onChangeText={(text) => setEditedAmount(text)}
-                color={editedAmount > 0 ? "green" : "red"}
-                placeholderTextColor="#333" // Color del texto de placeholder
+                placeholderTextColor={Colors.textSecondary}
               />
               <View style={styles.buttonsContainer}>
                 <TouchableOpacity style={styles.cancelButton} onPress={() => setEditModalVisible(false)}>
@@ -515,7 +685,7 @@ export default function Home() {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -525,7 +695,60 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background,
+  },
+  header: {
+    backgroundColor: Colors.primary,
+    padding: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.textDark,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: Colors.textDark,
+    opacity: 0.8,
+    marginBottom: 4,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: Colors.textDark,
+    opacity: 0.9,
+    fontWeight: '600',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
+    backgroundColor: Colors.backgroundSecondary,
+    marginBottom: 20,
+  },
+  statCard: {
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundCard,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    minWidth: 80,
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
   scrollContainer: {
     flex: 1,
@@ -536,50 +759,66 @@ const styles = StyleSheet.create({
   },
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 24,
+    backgroundColor: Colors.backgroundSecondary,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 24,
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
+    width: '100%',
+    maxHeight: '85%',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderBottomWidth: 0,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
-      height: 20,
+      height: -10,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 40,
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
     elevation: 20,
+  },
+  modalIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 16,
   },
   modalHeader: {
     alignItems: 'center',
     marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: Colors.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   detailInput: {
     width: '100%',
     padding: 16,
     borderWidth: 2,
-    borderColor: '#e9ecef',
+    borderColor: Colors.borderLight,
     borderRadius: 16,
     fontSize: 16,
-    backgroundColor: '#f8f9fa',
-    color: '#1a1a1a',
+    backgroundColor: Colors.backgroundSecondary,
+    color: Colors.text,
     marginBottom: 20,
     textAlignVertical: 'top',
     minHeight: 60,
@@ -590,32 +829,33 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   expenseButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: Colors.danger,
   },
   incomeButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: Colors.success,
   },
   inputContainer: {
     marginBottom: 20,
   },
   input: {
     width: '100%',
-    height: 40,
-    borderColor: '#27A9E1',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    color: '#333',
+    height: 50,
+    borderColor: Colors.borderLight,
+    borderWidth: 2,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    color: Colors.text,
     fontSize: 16,
-    borderRadius: 5,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundSecondary,
   },
   picker: {
     height: 50,
     width: '100%',
-    borderColor: '#27A9E1',
+    borderColor: Colors.primary,
     borderWidth: 1,
     marginBottom: 10,
-    color: '#333',
+    color: Colors.text,
     fontSize: 16,
     borderRadius: 5,
   },
@@ -631,11 +871,11 @@ const styles = StyleSheet.create({
   switchText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.text,
     marginLeft: 5,
   },
   selectedText: {
-    color: '#27A9E1',
+    color: Colors.primary,
   },
   icon: {
     marginRight: 5,
@@ -643,20 +883,24 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginTop: 16,
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.backgroundCard,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: Colors.borderLight,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: Colors.textSecondary,
   },
   saveButton: {
     flex: 1,
@@ -665,19 +909,34 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: Colors.primary,
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
+    color: Colors.textDark,
   },
-  
+  debugContainer: {
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 12,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  debugText: {
+    fontSize: 14,
+    color: Colors.text,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
 });

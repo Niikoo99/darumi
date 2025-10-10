@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const OptimizedAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -26,17 +27,17 @@ const OptimizedAmountInput = ({ value, onChangeText, isExpense, placeholder = "0
   const getAmountColors = () => {
     if (isExpense) {
       return {
-        textColor: '#dc3545',
-        borderColor: isFocused ? '#dc3545' : '#e9ecef',
-        backgroundColor: isFocused ? 'white' : '#f8f9fa',
-        currencyColor: '#dc3545'
+        textColor: Colors.danger,
+        borderColor: isFocused ? Colors.danger : Colors.borderLight,
+        backgroundColor: isFocused ? Colors.backgroundCard : Colors.backgroundSecondary,
+        currencyColor: Colors.danger
       };
     } else {
       return {
-        textColor: '#28a745',
-        borderColor: isFocused ? '#28a745' : '#e9ecef',
-        backgroundColor: isFocused ? 'white' : '#f8f9fa',
-        currencyColor: '#28a745'
+        textColor: Colors.success,
+        borderColor: isFocused ? Colors.success : Colors.borderLight,
+        backgroundColor: isFocused ? Colors.backgroundCard : Colors.backgroundSecondary,
+        currencyColor: Colors.success
       };
     }
   };
@@ -63,7 +64,7 @@ const OptimizedAmountInput = ({ value, onChangeText, isExpense, placeholder = "0
           value={value}
           onChangeText={handleTextChange}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={Colors.textSecondary}
           keyboardType="numeric"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 20,
-    shadowColor: '#000',
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 2,

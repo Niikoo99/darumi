@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const TransactionTypeToggle = ({ isExpense, onToggle }) => {
   return (
@@ -17,14 +18,14 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
         <FontAwesome5 
           name="money-bill-wave" 
           size={20} 
-          color={isExpense ? '#dc3545' : '#666'} 
+          color={isExpense ? Colors.danger : Colors.textSecondary} 
         />
         <Text style={[
           styles.toggleText,
           styles.expenseText,
           isExpense && styles.activeText
         ]}>
-          Gasto
+          💸 Gasto
         </Text>
       </TouchableOpacity>
       
@@ -40,14 +41,14 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
         <FontAwesome5 
           name="money-bill-alt" 
           size={20} 
-          color={!isExpense ? '#28a745' : '#666'} 
+          color={!isExpense ? Colors.success : Colors.textSecondary} 
         />
         <Text style={[
           styles.toggleText,
           styles.incomeText,
           !isExpense && styles.activeText
         ]}>
-          Ingreso
+          💰 Ingreso
         </Text>
       </TouchableOpacity>
     </View>
@@ -57,10 +58,12 @@ const TransactionTypeToggle = ({ isExpense, onToggle }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#f1f3f4',
+    backgroundColor: Colors.backgroundSecondary,
     borderRadius: 16,
     padding: 4,
     marginBottom: 24,
+    borderWidth: 2,
+    borderColor: Colors.border,
   },
   toggleOption: {
     flex: 1,
@@ -73,8 +76,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   activeOption: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -86,15 +89,17 @@ const styles = StyleSheet.create({
   toggleText: {
     fontSize: 16,
     fontWeight: '600',
+    color: Colors.text,
   },
   expenseText: {
-    color: '#dc3545',
+    color: Colors.danger,
   },
   incomeText: {
-    color: '#28a745',
+    color: Colors.success,
   },
   activeText: {
     fontWeight: '700',
+    color: Colors.textDark,
   },
 });
 

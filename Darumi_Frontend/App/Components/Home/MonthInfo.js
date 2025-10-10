@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import Colors from '../../../assets/shared/Colors';
+import { buildApiUrl, getEndpoints } from '../../../config/api';
 import app from './../../../assets/images/darumi.png';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -36,7 +37,7 @@ export default function MonthInfo({ onEditItem }) {
       if (isSignedIn) {
         setLoading(true);
         try {
-          const response = await axios.get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } });
+          const response = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { params: { Id_Usuario: user.id } });
           setData(response.data);
           setFilteredData(response.data); // Initialize filtered data with all data
         } catch (error) {
@@ -61,7 +62,7 @@ export default function MonthInfo({ onEditItem }) {
   const handleUpdateItem = async () => {
     try {
       // Send a PUT request to update the item
-      await axios.put(`http://192.168.1.131:3000/gastos/${selectedItem.id}`, {
+      await axios.put(buildApiUrl(getEndpoints().GASTOS + `/${selectedItem.id}`), {
         Titulo_gasto: editedTitle,
         Detalle_gasto: editedDetail,
         Monto_gasto: editedAmount,
@@ -116,7 +117,7 @@ export default function MonthInfo({ onEditItem }) {
     setSelectedMonth('');
     setLoading(true); // Set loading state to true to show the loading indicator
     try {
-      const response = await axios.get(`http://192.168.1.131:3000/gastos/`, { params: { Id_Usuario: user.id } });
+      const response = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { params: { Id_Usuario: user.id } });
       setData(response.data);
       setFilteredData(response.data);
       setError(null); // Clear any previous error

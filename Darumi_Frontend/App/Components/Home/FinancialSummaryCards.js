@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Colors from '../../../assets/shared/Colors';
 
 const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <View style={styles.cardIcon}>
-          <FontAwesome5 name="money-bill-wave" size={20} color="#dc3545" />
+        <View style={[styles.cardIcon, { backgroundColor: `${Colors.danger}20` }]}>
+          <FontAwesome5 name="money-bill-wave" size={20} color={Colors.danger} />
         </View>
         <Text style={styles.cardLabel}>Gastos</Text>
         <Text style={[styles.cardAmount, styles.expenseAmount]}>
@@ -16,8 +17,8 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
       </View>
 
       <View style={styles.card}>
-        <View style={styles.cardIcon}>
-          <FontAwesome5 name="money-bill-alt" size={20} color="#28a745" />
+        <View style={[styles.cardIcon, { backgroundColor: `${Colors.success}20` }]}>
+          <FontAwesome5 name="money-bill-alt" size={20} color={Colors.success} />
         </View>
         <Text style={styles.cardLabel}>Ingresos</Text>
         <Text style={[styles.cardAmount, styles.incomeAmount]}>
@@ -26,8 +27,8 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
       </View>
 
       <View style={styles.card}>
-        <View style={styles.cardIcon}>
-          <FontAwesome5 name="balance-scale" size={20} color="#17a2b8" />
+        <View style={[styles.cardIcon, { backgroundColor: `${Colors.primary}20` }]}>
+          <FontAwesome5 name="balance-scale" size={20} color={Colors.primary} />
         </View>
         <Text style={styles.cardLabel}>Balance</Text>
         <Text style={[
@@ -50,11 +51,13 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundCard,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -67,14 +70,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   cardLabel: {
     fontSize: 12,
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -83,18 +85,19 @@ const styles = StyleSheet.create({
   cardAmount: {
     fontSize: 18,
     fontWeight: '700',
+    color: Colors.text,
   },
   expenseAmount: {
-    color: '#dc3545',
+    color: Colors.danger,
   },
   incomeAmount: {
-    color: '#28a745',
+    color: Colors.success,
   },
   positiveAmount: {
-    color: '#17a2b8',
+    color: Colors.primary,
   },
   negativeAmount: {
-    color: '#dc3545',
+    color: Colors.danger,
   },
 });
 
