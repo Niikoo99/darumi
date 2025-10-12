@@ -35,6 +35,7 @@ const metas = require('./methods/methodUsuariosObjetivos');
 const { router: automatizacionPagos } = require('./methods/methodAutomatizacionPagos');
 const { mountGraphql } = require('./graphql');
 const { configurarSchedulerMetas, setSocketIO } = require('./schedulerMetas');
+const transactionsRoutes = require('./routes/transactionsRoutes');
 
 app.use(express.json());
 
@@ -47,6 +48,7 @@ app.use('/', tipos);
 app.use('/', metas);
 app.use('/', pagosHabituales);
 app.use('/', automatizacionPagos);
+app.use('/', transactionsRoutes);
 mountGraphql(app);
 
 // Initialize Socket.IO
@@ -92,8 +94,8 @@ app.get('/chau', (req, res) => {
   res.send('¡Adios, mundo cruel!');
 });
 
-server.listen(port, () => {
-  console.log(`El servidor está escuchando en el puerto ${port}`);
+server.listen(port, '0.0.0.0', () => {
+  console.log(`El servidor está escuchando en el puerto ${port} en todas las interfaces`);
   
   // Inicializar el sistema de automatización de pagos habituales
   const { configurarSchedulerMensual, ejecutarProcesamientoAlInicio, crearTablaLogsSiNoExiste } = require('./schedulerPagosHabituales');

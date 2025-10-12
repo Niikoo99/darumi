@@ -9,7 +9,9 @@ import {
   ScrollView,
   Animated,
   Modal,
-  Platform 
+  Platform,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -17,6 +19,9 @@ import Colors from '../../assets/shared/Colors';
 import ScrollableTransactionForm from '../Components/Home/ScrollableTransactionForm';
 import ModernInputField from '../Components/Home/ModernInputField';
 import FixedTransactionToggle from '../Components/Home/FixedTransactionToggle';
+import PaymentCard from '../Components/PaymentCard';
+import ConfirmModal from '../Components/ConfirmModal';
+import { usePayments } from '../../hooks/usePayments';
 import { formatCurrency } from '../../utils/formatting';
 import { 
   scaleSize, 
@@ -42,18 +47,29 @@ import {
 } from '../../utils/scaling';
 
 export default function UsualPayment() {
-  const [payments, setPayments] = useState([
-    { id: '1', name: 'Alquiler', amount: 1000, type: 'Pago', icon: 'home', color: Colors.danger },
-    { id: '2', name: 'Servicios', amount: 200, type: 'Pago', icon: 'tools', color: Colors.warning },
-    { id: '3', name: 'Salario', amount: 2500, type: 'Ingreso', icon: 'money-bill-wave', color: Colors.success },
-    { id: '4', name: 'Netflix', amount: 15, type: 'Pago', icon: 'play', color: '#E50914' },
-    { id: '5', name: 'Gym', amount: 80, type: 'Pago', icon: 'dumbbell', color: '#FF6B6B' },
-  ]);
+  // Hook personalizado para gestión de pagos
+  const {
+    payments,
+    resumen,
+    stats,
+    loading,
+    error,
+    isCreating,
+    isDeleting,
+    createPayment,
+    deletePayment,
+    toggleActive,
+    refresh,
+    clearError
+  } = usePayments();
 
   const [newPaymentName, setNewPaymentName] = useState('');
   const [newPaymentAmount, setNewPaymentAmount] = useState('');
-  const [isExpenseSelected, setIsExpenseSelected] = useState(true); // Cambio para usar el mismo patrón que Home
+  const [newPaymentRecurrencia, setNewPaymentRecurrencia] = useState('mensual');
+  const [isExpenseSelected, setIsExpenseSelected] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
   
   // Animaciones
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -77,46 +93,62 @@ export default function UsualPayment() {
     ]).start();
   }, []);
 
-  const totalAmount = payments.reduce((total, payment) => {
-    if (payment.type === 'Pago') {
-      return total - payment.amount;
-    } else {
-      return total + payment.amount;
-    }
-  }, 0);
+  // Calcular balance total usando datos reales
+  const totalAmount = stats.totalMontoIngresos - stats.totalMontoPagos;
 
-  const handleAddPayment = () => {
-    if (newPaymentName && newPaymentAmount) {
-      const paymentType = isExpenseSelected ? 'Pago' : 'Ingreso';
-      const newPayment = {
-        id: Math.random().toString(),
-        name: newPaymentName,
-        amount: parseFloat(newPaymentAmount),
-        type: paymentType,
-        icon: getPaymentIcon(newPaymentName),
-        color: getPaymentColor(paymentType),
+  const handleAddPayment = async () => {
+    if (!newPaymentName.trim() || !newPaymentAmount) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const paymentData = {
+        titulo: newPaymentName.trim(),
+        monto: parseFloat(newPaymentAmount),
+        tipo: isExpenseSelected ? 'Pago' : 'Ingreso',
+        recurrencia: newPaymentRecurrencia
       };
-      setPayments([...payments, newPayment]);
+
+      await createPayment(paymentData);
+      
+      // Limpiar formulario
       setNewPaymentName('');
       setNewPaymentAmount('');
+      setNewPaymentRecurrencia('mensual');
       setModalVisible(false);
+      
+      Alert.alert('Éxito', 'Pago habitual creado correctamente');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al crear el pago habitual');
     }
   };
 
   const handleRemovePayment = (id) => {
-    Animated.timing(fadeAnim, {
-      toValue: 0.5,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      const updatedPayments = payments.filter((payment) => payment.id !== id);
-      setPayments(updatedPayments);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    });
+    const payment = payments.find(p => p.Id_PagoHabitual === id);
+    setPaymentToDelete({ id, titulo: payment?.Titulo });
+    setConfirmModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!paymentToDelete) return;
+
+    try {
+      await deletePayment(paymentToDelete.id);
+      setConfirmModalVisible(false);
+      setPaymentToDelete(null);
+      Alert.alert('Éxito', 'Pago habitual eliminado correctamente');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al eliminar el pago habitual');
+    }
+  };
+
+  const handleToggleActive = async (id, active) => {
+    try {
+      await toggleActive(id, active);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al cambiar el estado del pago');
+    }
   };
 
   const getPaymentIcon = (name) => {
@@ -164,40 +196,12 @@ export default function UsualPayment() {
   };
 
   const renderPaymentItem = ({ item }) => (
-    <Animated.View
-      style={[
-        styles.paymentItem,
-        {
-          borderLeftColor: item.color,
-          transform: [{ scale: scaleAnim }],
-          opacity: fadeAnim,
-        },
-      ]}
-    >
-      <View style={styles.paymentInfo}>
-        <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
-          <FontAwesome5 name={item.icon} size={20} color={item.color} />
-        </View>
-        <View style={styles.paymentDetails}>
-          <Text style={styles.paymentName}>{item.name}</Text>
-          <Text style={styles.paymentType}>{item.type}</Text>
-        </View>
-      </View>
-      <View style={styles.paymentAmountContainer}>
-        <Text style={[
-          styles.paymentAmount,
-          { color: item.type === 'Pago' ? Colors.danger : Colors.success }
-        ]}>
-          {formatCurrency(item.amount)}
-        </Text>
-        <TouchableOpacity 
-          onPress={() => handleRemovePayment(item.id)}
-          style={styles.deleteButton}
-        >
-          <FontAwesome5 name="trash-alt" size={16} color={Colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
+    <PaymentCard
+      payment={item}
+      onToggleActive={handleToggleActive}
+      onDelete={handleRemovePayment}
+      showActions={true}
+    />
   );
 
   const totalAmountStyle = totalAmount >= 0 ? styles.totalAmountPositive : styles.totalAmountNegative;
@@ -213,11 +217,11 @@ export default function UsualPayment() {
       {/* Stats Bar */}
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{payments.filter(p => p.type === 'Pago').length}</Text>
+          <Text style={styles.statNumber}>{stats.totalPagos}</Text>
           <Text style={styles.statLabel}>Pagos</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{payments.filter(p => p.type === 'Ingreso').length}</Text>
+          <Text style={styles.statNumber}>{stats.totalIngresos}</Text>
           <Text style={styles.statLabel}>Ingresos</Text>
         </View>
         <View style={styles.statItem}>
@@ -228,31 +232,60 @@ export default function UsualPayment() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          {/* Pagos */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💸 Pagos Recurrentes</Text>
-            <FlatList
-              data={payments.filter(payment => payment.type === 'Pago')}
-              renderItem={renderPaymentItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
+      {/* Loading State */}
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Cargando pagos habituales...</Text>
+        </View>
+      )}
 
-          {/* Ingresos */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💰 Ingresos Recurrentes</Text>
-            <FlatList
-              data={payments.filter(payment => payment.type === 'Ingreso')}
-              renderItem={renderPaymentItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
+      {/* Error State */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={clearError} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {!loading && !error && (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Pagos */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>💸 Pagos Recurrentes</Text>
+              <FlatList
+                data={payments.filter(payment => payment.Tipo === 'Pago')}
+                renderItem={renderPaymentItem}
+                keyExtractor={(item) => item.Id_PagoHabitual.toString()}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No hay pagos recurrentes</Text>
+                  </View>
+                }
+              />
+            </View>
+
+            {/* Ingresos */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>💰 Ingresos Recurrentes</Text>
+              <FlatList
+                data={payments.filter(payment => payment.Tipo === 'Ingreso')}
+                renderItem={renderPaymentItem}
+                keyExtractor={(item) => item.Id_PagoHabitual.toString()}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No hay ingresos recurrentes</Text>
+                  </View>
+                }
+              />
+            </View>
 
           {/* Resumen Total */}
           <View style={styles.totalContainer}>
@@ -267,13 +300,24 @@ export default function UsualPayment() {
             </View>
           </View>
 
-          {/* Botón Agregar */}
-          <TouchableOpacity style={styles.addButton} onPress={openModal}>
-            <FontAwesome5 name="plus" size={20} color={Colors.white} />
-            <Text style={styles.addButtonText}>Agregar Pago Habitual</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            {/* Botón Agregar */}
+            <TouchableOpacity 
+              style={[styles.addButton, isCreating && styles.disabledButton]} 
+              onPress={openModal}
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <FontAwesome5 name="plus" size={20} color={Colors.white} />
+              )}
+              <Text style={styles.addButtonText}>
+                {isCreating ? 'Creando...' : 'Agregar Pago Habitual'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
       {/* Modal Rediseñado para Agregar Pago */}
       <ScrollableTransactionForm
@@ -332,7 +376,39 @@ export default function UsualPayment() {
           keyboardType="numeric"
         />
 
+        {/* Selector de recurrencia */}
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Recurrencia</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={newPaymentRecurrencia}
+              onValueChange={setNewPaymentRecurrencia}
+              style={styles.picker}
+            >
+              <Picker.Item label="Mensual" value="mensual" />
+              <Picker.Item label="Semanal" value="semanal" />
+              <Picker.Item label="Anual" value="anual" />
+            </Picker>
+          </View>
+        </View>
+
       </ScrollableTransactionForm>
+
+      {/* Modal de Confirmación */}
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="¿Eliminar pago habitual?"
+        message={`¿Estás seguro de que quieres eliminar "${paymentToDelete?.titulo}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setConfirmModalVisible(false);
+          setPaymentToDelete(null);
+        }}
+        loading={isDeleting}
+      />
     </View>
   );
 }
@@ -600,5 +676,87 @@ const styles = StyleSheet.create({
     fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.white,
+  },
+  
+  // Nuevos estilos para estados de carga y error
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: getSpacing(40),
+  },
+  
+  loadingText: {
+    fontSize: getBodyFontSize(),
+    color: Colors.textSecondary,
+    marginTop: getSpacing(16),
+  },
+  
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: getSpacing(20),
+    paddingVertical: getSpacing(40),
+  },
+  
+  errorText: {
+    fontSize: getBodyFontSize(),
+    color: Colors.danger,
+    textAlign: 'center',
+    marginBottom: getSpacing(16),
+  },
+  
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: getSpacing(24),
+    paddingVertical: getSpacing(12),
+    borderRadius: getBorderRadius(),
+  },
+  
+  retryButtonText: {
+    fontSize: getBodyFontSize(),
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  
+  emptyContainer: {
+    paddingVertical: getSpacing(20),
+    alignItems: 'center',
+  },
+  
+  emptyText: {
+    fontSize: getBodyFontSize(),
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  
+  disabledButton: {
+    opacity: 0.6,
+  },
+  
+  // Estilos para el selector de recurrencia
+  pickerContainer: {
+    marginBottom: getSpacing(20),
+  },
+  
+  pickerLabel: {
+    fontSize: getBodyFontSize(),
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: getSpacing(8),
+  },
+  
+  pickerWrapper: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: getBorderRadius(),
+    borderWidth: getBorderWidth(),
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  
+  picker: {
+    height: getSpacing(50),
+    color: Colors.text,
   },
 });

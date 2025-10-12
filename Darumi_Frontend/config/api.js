@@ -14,6 +14,10 @@ const API_CONFIG = {
     ESTADOS: '/estados',
     TIPOS_OBJETIVOS: '/tipos_objetivos',
     AUTOMATIZACION_PAGOS: '/automatizacion_pagos',
+    // Nuevos endpoints para transacciones unificadas
+    TRANSACTIONS: '/api/transactions',
+    TRANSACTIONS_STATS: '/api/transactions/stats',
+    TRANSACTIONS_CATEGORIES: '/api/transactions/categories',
   },
   
   // Configuración de timeout para requests

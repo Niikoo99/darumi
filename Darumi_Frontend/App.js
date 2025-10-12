@@ -9,7 +9,7 @@ import axios from 'axios';
 import Login from './App/Screens/Login';
 import Colors from './assets/shared/Colors';
 import SignInWithOAuth from './App/Components/SignInWithOAuth';
-import TabNavigation from './App/Navigations/TabNavigation';
+import StackNavigation from './App/Navigations/StackNavigation';
 
 export default function App() {
   
@@ -19,7 +19,7 @@ export default function App() {
         <StatusBar backgroundColor="transparent" translucent={true} />
         <SignedIn>          
           <NavigationContainer>
-            <TabNavigation/>
+            <StackNavigation/>
           </NavigationContainer>
         </SignedIn>
         <SignedOut>

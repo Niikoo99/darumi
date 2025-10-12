@@ -1,6 +1,7 @@
 import { View, Text, Button, Modal, TextInput, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { ClerkProvider, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../Components/Home/Header';
 import CategoryGrid from '../Components/Home/CategoryGrid';
 import ModernCategoryGrid from '../Components/Home/ModernCategoryGrid';
@@ -19,6 +20,8 @@ import FinancialSummaryCards from '../Components/Home/FinancialSummaryCards';
 import QuickActions from '../Components/Home/QuickActions';
 import EnhancedTransactionList from '../Components/Home/EnhancedTransactionList';
 import FloatingAddButton from '../Components/Home/FloatingAddButton';
+import PaymentsSummary from '../Components/Home/PaymentsSummary';
+import { usePayments } from '../../hooks/usePayments';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -59,7 +62,7 @@ import {
 } from '../../utils/scaling';
 
 export default function Home() {
-  
+  const navigation = useNavigation();
   const { isLoaded, signOut } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [isExpensesSelected, setIsExpensesSelected] = useState(true); // State to track whether expenses or income is selected  
@@ -82,6 +85,9 @@ export default function Home() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  
+  // Hook para pagos habituales
+  const { payments, resumen, refresh: refreshPayments } = usePayments();
   
   // Estados para el dashboard
   const [financialData, setFinancialData] = useState({
@@ -165,7 +171,13 @@ export default function Home() {
             .filter(t => t.Monto_gasto > 0)
             .reduce((sum, t) => sum + t.Monto_gasto, 0);
 
-          const balance = totalIncome - totalExpenses;
+          // Calcular balance incluyendo pagos habituales
+          let balance = totalIncome - totalExpenses;
+          
+          // Si hay resumen de pagos habituales, incluirlo en el cálculo
+          if (resumen) {
+            balance += resumen.balance || 0;
+          }
 
           setFinancialData({
             totalExpenses,
@@ -542,6 +554,22 @@ export default function Home() {
           />
         </Animated.View>
 
+        {/* Payments Summary */}
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <PaymentsSummary
+            payments={payments}
+            resumen={resumen}
+            onRefresh={refreshPayments}
+          />
+        </Animated.View>
+
         {/* Quick Actions */}
         <Animated.View
           style={[
@@ -582,6 +610,7 @@ export default function Home() {
             transactions={transactions}
             onTransactionPress={(transaction) => console.log('Transaction pressed:', transaction)}
             onEditTransaction={handleEditItem}
+            onViewAll={() => navigation.navigate('AllTransactions')}
           />
         </Animated.View>
       </ScrollView>

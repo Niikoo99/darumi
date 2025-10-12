@@ -15,7 +15,7 @@ import {
   getMaxWidth
 } from '../../../utils/scaling';
 
-const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction }) => {
+const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction, onViewAll }) => {
   // Mapeo de categorías a iconos y colores
   const categoryConfig = {
     'Comida/Restaurante': { icon: 'hamburger', color: '#ff6b6b' },
@@ -91,7 +91,7 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>📋 Transacciones Recientes</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onViewAll}>
           <Text style={styles.viewAllText}>Ver todas</Text>
         </TouchableOpacity>
       </View>

@@ -52,8 +52,11 @@ async function procesarPagosHabitualesMensuales() {
         
         // Crear el gasto correspondiente
         await crearGastoDesdePagoHabitual(pago, primerDiaMes);
-        procesados++;
         
+        // Crear notificación automática
+        await crearNotificacionPagoProcesado(pago);
+        
+        procesados++;
         console.log(`Pago habitual procesado: ${pago.Titulo} - $${pago.Monto}`);
         
       } catch (error) {
@@ -127,7 +130,7 @@ function crearGastoDesdePagoHabitual(pagoHabitual, fechaGasto) {
     const detalleGasto = `Pago habitual: ${pagoHabitual.Titulo}`;
     
     const query = `
-      INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Id_categoria, Id_usuario, Fecha_creacion_gasto, es_pago_habitual, id_pago_habitual_origen)
+      INSERT INTO gastos (Monto_gasto, Titulo_gasto, Detalle_gasto, Categoria_gasto, Id_usuario, Fecha_creacion_gasto, es_pago_habitual, id_pago_habitual_origen)
       VALUES (?, ?, ?, ?, ?, ?, 1, ?)
     `;
     
@@ -142,6 +145,29 @@ function crearGastoDesdePagoHabitual(pagoHabitual, fechaGasto) {
     ];
     
     connection.query(query, valores, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+}
+
+/**
+ * Crea una notificación cuando se procesa un pago habitual
+ */
+function crearNotificacionPagoProcesado(pagoHabitual) {
+  return new Promise((resolve, reject) => {
+    const titulo = `💳 Pago Habitual Procesado`;
+    const mensaje = `Se procesó el pago habitual: ${pagoHabitual.Titulo} ($${pagoHabitual.Monto})`;
+    
+    const query = `
+      INSERT INTO notificaciones (Id_usuario, Titulo, Mensaje, Fecha_creacion)
+      VALUES (?, ?, ?, NOW())
+    `;
+    
+    connection.query(query, [pagoHabitual.Id_Usuario, titulo, mensaje], (error, results) => {
       if (error) {
         reject(error);
       } else {
