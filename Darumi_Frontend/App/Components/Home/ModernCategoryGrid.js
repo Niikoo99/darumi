@@ -204,55 +204,55 @@ const ModernCategoryGrid = ({ categories, selectedCategory, onCategorySelect, is
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: getSpacing(32),
+    marginBottom: getSpacing(16),
   },
   header: {
-    marginBottom: getSpacing(20),
+    marginBottom: getSpacing(8),
   },
   title: {
-    fontSize: getTitleFontSize(18),
+    fontSize: getTitleFontSize(14),
     fontWeight: '700',
     color: Colors.text,
-    marginBottom: getSpacing(4),
+    marginBottom: getSpacing(2),
   },
   mainGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: getSpacing(20),
+    marginBottom: getSpacing(8),
   },
   categoryItem: {
     width: '30%',
-    marginBottom: getSpacing(16),
+    marginBottom: getSpacing(8),
   },
   categoryItemHorizontal: {
     marginRight: getSpacing(12),
     minWidth: getMinWidth(100),
   },
   categoryButton: {
-    borderRadius: getBorderRadius(16),
-    padding: getSpacing(20),
+    borderRadius: getBorderRadius(10),
+    padding: getSpacing(8),
     alignItems: 'center',
     justifyContent: 'center',
-    ...getShadowSize(4, 8, 0.1),
-    minHeight: getMinHeight(100),
+    ...getShadowSize(2, 4, 0.1),
+    minHeight: getMinHeight(70),
   },
   iconContainer: {
-    width: getIconSize(48),
-    height: getIconSize(48),
-    borderRadius: getBorderRadius(24),
+    width: getIconSize(32),
+    height: getIconSize(32),
+    borderRadius: getBorderRadius(16),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: getSpacing(12),
+    marginBottom: getSpacing(6),
   },
   emojiIcon: {
-    fontSize: scaleSize(24),
+    fontSize: scaleSize(16),
   },
   categoryName: {
-    fontSize: scaleSize(12),
+    fontSize: scaleSize(9),
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: scaleSize(14),
+    lineHeight: scaleSize(11),
   },
   additionalSection: {
     marginTop: getSpacing(8),

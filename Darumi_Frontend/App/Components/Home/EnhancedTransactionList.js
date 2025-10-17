@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import AutoScaleCurrencyText from '../AutoScaleCurrencyText';
 import { 
   scaleSize, 
   getBodyFontSize, 
@@ -76,12 +77,15 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
         </View>
         
         <View style={styles.transactionAmount}>
-          <Text style={[
-            styles.amountText,
-            isExpense ? styles.expenseAmount : styles.incomeAmount
-          ]}>
-            {isExpense ? '-' : '+'}{formatCurrency(Math.abs(item.Monto_gasto))}
-          </Text>
+          <AutoScaleCurrencyText 
+            value={Math.abs(item.Monto_gasto)} 
+            variant="small"
+            style={[
+              styles.amountText,
+              isExpense ? styles.expenseAmount : styles.incomeAmount
+            ]}
+            testID={`transaction-amount-${index}`}
+          />
         </View>
       </TouchableOpacity>
     );
@@ -182,12 +186,13 @@ const styles = StyleSheet.create({
   },
   transactionAmount: {
     alignItems: 'flex-end',
+    flexShrink: 1,
+    minWidth: 0,
   },
   amountText: {
     fontSize: scaleSize(14),
     fontWeight: '700',
     textAlign: 'right',
-    flexWrap: 'wrap',
     maxWidth: getMaxWidth(100),
   },
   expenseAmount: {

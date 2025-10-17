@@ -36,6 +36,7 @@ const { router: automatizacionPagos } = require('./methods/methodAutomatizacionP
 const { mountGraphql } = require('./graphql');
 const { configurarSchedulerMetas, setSocketIO } = require('./schedulerMetas');
 const transactionsRoutes = require('./routes/transactionsRoutes');
+const reportsRoutes = require('./routes/reportsRoutes');
 
 app.use(express.json());
 
@@ -49,6 +50,7 @@ app.use('/', metas);
 app.use('/', pagosHabituales);
 app.use('/', automatizacionPagos);
 app.use('/', transactionsRoutes);
+app.use('/', reportsRoutes);
 mountGraphql(app);
 
 // Initialize Socket.IO

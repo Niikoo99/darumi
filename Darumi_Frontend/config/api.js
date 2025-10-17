@@ -2,7 +2,7 @@
 const API_CONFIG = {
   // Cambia esta IP por la IP de tu máquina donde está ejecutándose el backend
   // Para encontrar tu IP: ejecuta 'ipconfig' en Windows o 'ifconfig' en Mac/Linux
-  BASE_URL: 'http://192.168.0.13:3000',
+  BASE_URL: 'http://192.168.0.10:3000', // 172.20.10.2
   
   // URLs específicas de endpoints
   ENDPOINTS: {

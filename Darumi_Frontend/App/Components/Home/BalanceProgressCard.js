@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import AutoScaleCurrencyText from '../AutoScaleCurrencyText';
 import { 
   scaleSize, 
   getBodyFontSize, 
@@ -39,15 +40,23 @@ const BalanceProgressCard = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Balance del Mes</Text>
-        <Text style={[styles.balanceAmount, { color: getBalanceColor() }]}>
-          {formatCurrency(balance)}
-        </Text>
+        <AutoScaleCurrencyText 
+          value={balance} 
+          variant="balance"
+          style={{ color: getBalanceColor() }}
+          testID="balance-amount"
+        />
       </View>
       
       <View style={styles.progressSection}>
         <View style={styles.progressLabels}>
           <Text style={styles.progressLabel}>Dinero Disponible</Text>
-          <Text style={styles.progressValue}>{formatCurrency(effectiveAvailableMoney)}</Text>
+          <AutoScaleCurrencyText 
+            value={effectiveAvailableMoney} 
+            variant="small"
+            style={styles.progressValue}
+            testID="available-money"
+          />
         </View>
         
         <View style={styles.progressBarContainer}>
@@ -65,7 +74,12 @@ const BalanceProgressCard = ({
         </View>
         
         <Text style={styles.remainingText}>
-          Te quedan {formatCurrency(remainingMoney)} por gastar
+          Llevas gastado <AutoScaleCurrencyText 
+            value={spentMoney} 
+            variant="small"
+            style={{ color: Colors.danger }}
+            testID="spent-money"
+          />
         </Text>
       </View>
     </View>
@@ -92,13 +106,6 @@ const styles = StyleSheet.create({
     marginBottom: getSpacing(8),
     fontWeight: '500',
   },
-  balanceAmount: {
-    fontSize: getTitleFontSize(24),
-    fontWeight: '700',
-    color: Colors.text,
-    textAlign: 'center',
-    flexWrap: 'wrap',
-  },
   progressSection: {
     marginTop: getSpacing(8),
   },
@@ -117,7 +124,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: '600',
     textAlign: 'right',
-    flexWrap: 'wrap',
+    flexShrink: 1,
+    minWidth: 0,
   },
   progressBarContainer: {
     marginBottom: getSpacing(8),
@@ -136,9 +144,10 @@ const styles = StyleSheet.create({
   remainingText: {
     textAlign: 'center',
     fontSize: scaleSize(12),
-    color: Colors.textSecondary,
+    color: Colors.danger,
     fontWeight: '500',
-    flexWrap: 'wrap',
+    flexShrink: 1,
+    minWidth: 0,
   },
 });
 

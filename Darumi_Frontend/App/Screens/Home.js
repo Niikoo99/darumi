@@ -16,6 +16,7 @@ import FixedActionButtons from '../Components/Home/FixedActionButtons';
 import SimpleFixedActionButtons from '../Components/Home/SimpleFixedActionButtons';
 import BalanceProgressCard from '../Components/Home/BalanceProgressCard';
 import CategoryChart from '../Components/Home/CategoryChart';
+import TopCategoryCard from '../Components/Home/TopCategoryCard';
 import FinancialSummaryCards from '../Components/Home/FinancialSummaryCards';
 import QuickActions from '../Components/Home/QuickActions';
 import EnhancedTransactionList from '../Components/Home/EnhancedTransactionList';
@@ -28,6 +29,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../assets/shared/Colors';
 import { buildApiUrl, getEndpoints, testConnection } from '../../config/api';
 import { formatCurrency } from '../../utils/formatting';
+import AutoScaleCurrencyText from '../Components/AutoScaleCurrencyText';
 import { 
   scaleSize, 
   scaleFont, 
@@ -76,7 +78,6 @@ export default function Home() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState('');
   const {isSignedIn, user} = useUser();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -97,6 +98,11 @@ export default function Home() {
     availableMoney: 0, // Se calculará dinámicamente basado en el balance
   });
   const [categoryData, setCategoryData] = useState([]);
+  
+  // Estados para las nuevas tarjetas de categorías
+  const [topExpenses, setTopExpenses] = useState(null);
+  const [topIncomes, setTopIncomes] = useState(null);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
   // Estados para animaciones
   const [modalAnimation] = useState(new Animated.Value(0));
@@ -125,6 +131,43 @@ export default function Home() {
       }),
     ]).start();
   }, []);
+
+  // Función para cargar datos de categorías usando los nuevos endpoints
+  const fetchCategoryReports = async () => {
+    if (!isSignedIn || !user?.id) return;
+    
+    setIsLoadingCategories(true);
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      console.log('📊 Fetching category reports for month:', currentMonth);
+      
+      const [expensesRes, incomesRes] = await Promise.all([
+        axios.get(buildApiUrl('/api/reports/top-expenses'), {
+          params: { 
+            Id_Usuario: user.id,
+            month: currentMonth,
+            limit: 3
+          }
+        }),
+        axios.get(buildApiUrl('/api/reports/top-incomes'), {
+          params: { 
+            Id_Usuario: user.id,
+            month: currentMonth,
+            limit: 3
+          }
+        })
+      ]);
+      
+      setTopExpenses(expensesRes.data);
+      setTopIncomes(incomesRes.data);
+      
+    } catch (error) {
+      console.error('❌ Error fetching category reports:', error);
+      // No establecer error aquí para no afectar la funcionalidad principal
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -219,15 +262,11 @@ export default function Home() {
       }
     };
 
-    // Probar conexión primero
-    testConnection().then(isConnected => {
-      const connectionStatus = isConnected ? '✅ OK' : '❌ FALLO';
-      console.log('🔌 Conexión con backend:', connectionStatus);
-      setDebugInfo(`🔌 Conexión: ${connectionStatus}`);
-      if (isConnected) {
-        fetchData();
-      }
-    });
+    // Fetch data directamente
+    fetchData();
+    
+    // Fetch category reports usando los nuevos endpoints
+    fetchCategoryReports();
   }, [isSignedIn, user]);
 
   const handleGuardar = async () => {
@@ -285,6 +324,7 @@ export default function Home() {
       
       // Refresh data after saving
       await fetchData();
+      await fetchCategoryReports();
     } catch (error) {
       console.error('Error al guardar:', error);
       setFormErrors({ general: 'Error al guardar la transacción. Inténtalo de nuevo.' });
@@ -472,17 +512,29 @@ export default function Home() {
     >
       <View style={styles.statCard}>
         <FontAwesome5 name="chart-line" size={20} color={Colors.primary} />
-        <Text style={styles.statNumber}>{formatCurrency(financialData.balance)}</Text>
+        <AutoScaleCurrencyText 
+          value={financialData.balance} 
+          variant="balance"
+          testID="balance-stat"
+        />
         <Text style={styles.statLabel}>Balance</Text>
       </View>
       <View style={styles.statCard}>
         <FontAwesome5 name="arrow-down" size={20} color={Colors.danger} />
-        <Text style={styles.statNumber}>{formatCurrency(financialData.totalExpenses)}</Text>
+        <AutoScaleCurrencyText 
+          value={financialData.totalExpenses} 
+          variant="expense"
+          testID="expenses-stat"
+        />
         <Text style={styles.statLabel}>Gastos</Text>
       </View>
       <View style={styles.statCard}>
         <FontAwesome5 name="arrow-up" size={20} color={Colors.success} />
-        <Text style={styles.statNumber}>{formatCurrency(financialData.totalIncome)}</Text>
+        <AutoScaleCurrencyText 
+          value={financialData.totalIncome} 
+          variant="income"
+          testID="income-stat"
+        />
         <Text style={styles.statLabel}>Ingresos</Text>
       </View>
     </Animated.View>
@@ -490,39 +542,19 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* Debug Info */}
-      {debugInfo && (
-        <View style={styles.debugContainer}>
-          <Text style={styles.debugText}>{debugInfo}</Text>
-        </View>
-      )}
+      {/* Saludo Compacto */}
+      <View style={styles.compactHeader}>
+        <Text style={styles.compactGreeting} numberOfLines={1} allowFontScaling={true}>
+          Hola, {user?.firstName || 'Usuario'}
+        </Text>
+      </View>
       
-      {/* Header Gamificado */}
-      <Animated.View
-        style={[
-          styles.header,
-          {
-            transform: [{ translateY: slideAnim }],
-            opacity: fadeAnim,
-          },
-        ]}
-      >
-        <Text style={styles.headerTitle}>🏠 Dashboard</Text>
-        <Text style={styles.headerSubtitle}>Tu resumen financiero personal</Text>
-        {user && (
-          <Text style={styles.welcomeText}>¡Hola, {user.firstName || 'Usuario'}!</Text>
-        )}
-      </Animated.View>
-      
-      {/* Stats Bar */}
-      {renderStats()}
-
       <ScrollView 
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Balance Progress Card */}
+        {/* Balance Progress Card - Elemento Principal */}
         <Animated.View
           style={[
             {
@@ -538,39 +570,7 @@ export default function Home() {
           />
         </Animated.View>
 
-        {/* Financial Summary Cards */}
-        <Animated.View
-          style={[
-            {
-              transform: [{ scale: scaleAnim }],
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <FinancialSummaryCards
-            expenses={financialData.totalExpenses}
-            income={financialData.totalIncome}
-            balance={financialData.balance}
-          />
-        </Animated.View>
-
-        {/* Payments Summary */}
-        <Animated.View
-          style={[
-            {
-              transform: [{ scale: scaleAnim }],
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <PaymentsSummary
-            payments={payments}
-            resumen={resumen}
-            onRefresh={refreshPayments}
-          />
-        </Animated.View>
-
-        {/* Quick Actions */}
+        {/* Quick Actions - Acciones Principales */}
         <Animated.View
           style={[
             {
@@ -585,7 +585,7 @@ export default function Home() {
           />
         </Animated.View>
 
-        {/* Category Chart */}
+        {/* Top Categories - Gastos e Ingresos Separados */}
         <Animated.View
           style={[
             {
@@ -594,10 +594,33 @@ export default function Home() {
             },
           ]}
         >
-          <CategoryChart categories={categoryData} />
+          <TopCategoryCard
+            title="Top Gastos del Mes"
+            data={topExpenses?.topCategories || []}
+            totalAmount={topExpenses?.totalExpenses || 0}
+            themeColor="#F87171" // Rojo/rosa para gastos
+            isLoading={isLoadingCategories}
+          />
         </Animated.View>
 
-        {/* Enhanced Transaction List */}
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <TopCategoryCard
+            title="Top Ingresos del Mes"
+            data={topIncomes?.topCategories || []}
+            totalAmount={topIncomes?.totalIncomes || 0}
+            themeColor="#4ADE80" // Verde para ingresos
+            isLoading={isLoadingCategories}
+          />
+        </Animated.View>
+        
+         {/* Enhanced Transaction List */}
         <Animated.View
           style={[
             {
@@ -611,6 +634,22 @@ export default function Home() {
             onTransactionPress={(transaction) => console.log('Transaction pressed:', transaction)}
             onEditTransaction={handleEditItem}
             onViewAll={() => navigation.navigate('AllTransactions')}
+          />
+        </Animated.View>
+
+         {/* Payments Summary */}
+        <Animated.View
+          style={[
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <PaymentsSummary
+            payments={payments}
+            resumen={resumen}
+            onRefresh={refreshPayments}
           />
         </Animated.View>
       </ScrollView>
@@ -627,6 +666,12 @@ export default function Home() {
         onClose={closeModal}
         title={isExpensesSelected ? '💸 Nuevo Gasto' : '💰 Nuevo Ingreso'}
         subtitle="Registra tu transacción rápidamente"
+        fixedTopComponent={
+          <FixedTransactionToggle 
+            isExpense={isExpensesSelected}
+            onToggle={handleToggleSwitch}
+          />
+        }
         actionButtons={
           <>
             <TouchableOpacity 
@@ -660,12 +705,6 @@ export default function Home() {
           </>
         }
       >
-        {/* Toggle Gastos/Ingresos */}
-        <FixedTransactionToggle 
-          isExpense={isExpensesSelected}
-          onToggle={handleToggleSwitch}
-        />
-
         {/* Campo de título */}
         <ModernInputField
           label="¿En qué gastaste?"
@@ -675,15 +714,12 @@ export default function Home() {
           keyboardType="default"
         />
 
-        {/* Campo de detalle */}
-        <ModernInputField
-          label="Detalle adicional"
-          placeholder="Agrega más detalles sobre esta transacción..."
-          value={valor_Detalle}
-          onChangeText={setValorDetalle}
-          multiline={true}
-          numberOfLines={3}
-          isOptional={true}
+        {/* Campo de monto premium */}
+        <OptimizedAmountInput
+          value={valor_Monto}
+          onChangeText={setValorMonto}
+          isExpense={isExpensesSelected}
+          placeholder="0"
         />
 
         {/* Grilla de categorías moderna */}
@@ -696,12 +732,15 @@ export default function Home() {
           />
         )}
 
-        {/* Campo de monto premium */}
-        <OptimizedAmountInput
-          value={valor_Monto}
-          onChangeText={setValorMonto}
-          isExpense={isExpensesSelected}
-          placeholder="0"
+        {/* Campo de detalle */}
+        <ModernInputField
+          label="Detalle adicional"
+          placeholder="Agrega más detalles sobre esta transacción..."
+          value={valor_Detalle}
+          onChangeText={setValorDetalle}
+          multiline={true}
+          numberOfLines={3}
+          isOptional={true}
         />
 
         {/* Mensajes de error */}
@@ -788,58 +827,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    backgroundColor: Colors.primary,
-    ...getHeaderSize(),
-    alignItems: 'center',
+  compactHeader: {
+    paddingHorizontal: getHorizontalPadding(),
+    paddingVertical: getSpacing(12),
+    backgroundColor: Colors.background,
   },
-  headerTitle: {
-    fontSize: getTitleFontSize(),
-    fontWeight: '800',
-    color: Colors.textDark,
-    marginBottom: getSpacing(8),
-  },
-  headerSubtitle: {
-    fontSize: getBodyFontSize(),
-    color: Colors.textDark,
-    opacity: 0.8,
-    marginBottom: getSpacing(4),
-  },
-  welcomeText: {
-    fontSize: getBodyFontSize(),
-    color: Colors.textDark,
-    opacity: 0.9,
+  compactGreeting: {
+    fontSize: getBodyFontSize(16),
     fontWeight: '600',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    ...getStatsBarSize(),
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  statCard: {
-    alignItems: 'center',
-    backgroundColor: Colors.backgroundCard,
-    padding: getSpacing(12),
-    borderRadius: getBorderRadius(),
-    borderWidth: getBorderWidth(),
-    borderColor: Colors.border,
-    minWidth: getMinWidth(),
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: getBodyFontSize(),
-    fontWeight: '700',
     color: Colors.text,
-    marginTop: getSpacing(8),
-    marginBottom: getSpacing(4),
-    textAlign: 'center',
-    flexWrap: 'wrap',
-  },
-  statLabel: {
-    fontSize: getSmallFontSize(),
-    color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   scrollContainer: {
     flex: 1,

@@ -44,14 +44,15 @@ const QuickActions = ({ onAddExpense, onAddIncome }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: getGap(12),
-    marginBottom: getSpacing(20),
+    gap: getGap(16),
+    marginBottom: getSpacing(16),
+    paddingHorizontal: getSpacing(4),
   },
   actionButton: {
     flex: 1,
     backgroundColor: Colors.backgroundCard,
     borderRadius: getBorderRadius(16),
-    padding: getSpacing(20),
+    padding: getSpacing(16),
     alignItems: 'center',
     borderWidth: getBorderWidth(2),
     borderColor: Colors.border,

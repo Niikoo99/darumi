@@ -547,10 +547,11 @@ export default function Achievement() {
           )}
 
           {/* Botón de Celebración (para demo) */}
-          <TouchableOpacity style={styles.celebrationButton} onPress={() => triggerCelebration('¡Demo de celebración!')}>
+          {/* TODO: Se uso de demo pero se puede hacer algo luego */}
+          {/* <TouchableOpacity style={styles.celebrationButton} onPress={() => triggerCelebration('¡Demo de celebración!')}>
             <FontAwesome5 name="gift" size={20} color={Colors.white} />
             <Text style={styles.celebrationButtonText}>¡Celebrar Logro!</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </ScrollView>
 

@@ -15,6 +15,7 @@ import {
 
 const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [displayValue, setDisplayValue] = useState(value || '');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -35,22 +36,72 @@ const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" 
     ]).start();
   }, []);
 
+  // Sincronizar displayValue con value
+  useEffect(() => {
+    setDisplayValue(value || '');
+  }, [value]);
+
   const formatAmount = (text) => {
-    // Remover caracteres no numéricos excepto punto decimal
-    const cleaned = text.replace(/[^0-9.]/g, '');
+    // Remover caracteres no numéricos excepto punto y coma decimal
+    const cleaned = text.replace(/[^0-9.,]/g, '');
     
-    // Evitar múltiples puntos decimales
-    const parts = cleaned.split('.');
+    // Si hay tanto punto como coma, mantener solo la coma (formato argentino)
+    if (cleaned.includes('.') && cleaned.includes(',')) {
+      // Mantener solo la coma, eliminar puntos
+      return cleaned.replace(/\./g, '');
+    }
+    
+    // Si solo hay punto, convertir a coma (formato argentino)
+    if (cleaned.includes('.') && !cleaned.includes(',')) {
+      return cleaned.replace('.', ',');
+    }
+    
+    // Evitar múltiples comas decimales
+    const parts = cleaned.split(',');
     if (parts.length > 2) {
-      return parts[0] + '.' + parts.slice(1).join('');
+      return parts[0] + ',' + parts.slice(1).join('');
+    }
+    
+    // Limitar a máximo 2 decimales
+    if (parts.length === 2 && parts[1].length > 2) {
+      return parts[0] + ',' + parts[1].substring(0, 2);
     }
     
     return cleaned;
   };
 
+  const formatForDisplay = (value) => {
+    if (!value || value === '') return '';
+    
+    // Convertir coma decimal a punto para parseFloat
+    const normalized = value.replace(',', '.');
+    const numValue = parseFloat(normalized);
+    
+    if (isNaN(numValue)) return value;
+    
+    // Formatear usando Intl.NumberFormat para formato argentino completo
+    const formatted = new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(numValue);
+    
+    return formatted;
+  };
+
+  const parseFormattedValue = (formattedValue) => {
+    if (!formattedValue) return '';
+    
+    // Remover puntos de miles y convertir coma decimal a punto
+    const cleaned = formattedValue.replace(/\./g, '').replace(',', '.');
+    
+    return cleaned;
+  };
+
   const handleTextChange = (text) => {
-    const formatted = formatAmount(text);
-    onChangeText(formatted);
+    // Solo limpiar caracteres no válidos, sin formatear
+    const cleaned = formatAmount(text);
+    setDisplayValue(cleaned);
+    onChangeText(cleaned);
     
     // Animación de pulso al escribir
     Animated.sequence([
@@ -101,6 +152,11 @@ const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" 
 
   const handleBlur = () => {
     setIsFocused(false);
+    
+    // Formatear solo cuando se pierde el foco
+    const formatted = formatForDisplay(displayValue);
+    setDisplayValue(formatted);
+    
     Animated.spring(scaleAnim, {
       toValue: 1,
       tension: 100,
@@ -143,11 +199,11 @@ const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" 
               styles.amountInput,
               { color: colors.textColor }
             ]}
-            value={value}
+            value={displayValue}
             onChangeText={handleTextChange}
             placeholder={placeholder}
             placeholderTextColor="rgba(255, 255, 255, 0.3)"
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             onFocus={handleFocus}
             onBlur={handleBlur}
             maxLength={10}

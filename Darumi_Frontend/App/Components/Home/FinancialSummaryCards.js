@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
+import AutoScaleCurrencyText from '../AutoScaleCurrencyText';
 import { 
   scaleSize, 
   getBodyFontSize, 
@@ -23,9 +24,11 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
           <FontAwesome5 name="money-bill-wave" size={getIconSize(20)} color={Colors.danger} />
         </View>
         <Text style={styles.cardLabel}>Gastos</Text>
-        <Text style={[styles.cardAmount, styles.expenseAmount]}>
-          {formatCurrency(expenses)}
-        </Text>
+        <AutoScaleCurrencyText 
+          value={expenses} 
+          variant="expense"
+          testID="expenses-card"
+        />
       </View>
 
       <View style={styles.card}>
@@ -33,9 +36,11 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
           <FontAwesome5 name="money-bill-alt" size={getIconSize(20)} color={Colors.success} />
         </View>
         <Text style={styles.cardLabel}>Ingresos</Text>
-        <Text style={[styles.cardAmount, styles.incomeAmount]}>
-          {formatCurrency(income)}
-        </Text>
+        <AutoScaleCurrencyText 
+          value={income} 
+          variant="income"
+          testID="income-card"
+        />
       </View>
 
       <View style={styles.card}>
@@ -43,12 +48,12 @@ const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) =>
           <FontAwesome5 name="balance-scale" size={getIconSize(20)} color={Colors.primary} />
         </View>
         <Text style={styles.cardLabel}>Balance</Text>
-        <Text style={[
-          styles.cardAmount, 
-          balance >= 0 ? styles.positiveAmount : styles.negativeAmount
-        ]}>
-          {formatCurrency(balance)}
-        </Text>
+        <AutoScaleCurrencyText 
+          value={balance} 
+          variant="balance"
+          style={balance >= 0 ? styles.positiveAmount : styles.negativeAmount}
+          testID="balance-card"
+        />
       </View>
     </View>
   );
@@ -71,6 +76,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     ...getShadowSize(4, 16, 0.08),
     minWidth: getMinWidth(80),
+    flexShrink: 1,
   },
   cardIcon: {
     width: getIconSize(40),
@@ -87,20 +93,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: scaleSize(0.5),
     fontWeight: '600',
-  },
-  cardAmount: {
-    fontSize: scaleSize(14),
-    fontWeight: '700',
-    color: Colors.text,
-    textAlign: 'center',
-    flexWrap: 'wrap',
-    maxWidth: '100%',
-  },
-  expenseAmount: {
-    color: Colors.danger,
-  },
-  incomeAmount: {
-    color: Colors.success,
   },
   positiveAmount: {
     color: Colors.primary,

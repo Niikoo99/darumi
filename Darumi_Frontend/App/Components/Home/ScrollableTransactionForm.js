@@ -30,7 +30,8 @@ const ScrollableTransactionForm = ({
   onClose,
   title,
   subtitle,
-  actionButtons 
+  actionButtons,
+  fixedTopComponent
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
@@ -87,12 +88,12 @@ const ScrollableTransactionForm = ({
             }
           ]}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.modalIndicator} />
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
-          </View>
+          {/* Componente fijo en la parte superior */}
+          {fixedTopComponent && (
+            <View style={styles.fixedTopContainer}>
+              {fixedTopComponent}
+            </View>
+          )}
 
           {/* Contenido scrollable */}
           <ScrollView
@@ -122,57 +123,37 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: getSpacing(16),
   },
   container: {
     backgroundColor: Colors.backgroundSecondary,
-    borderTopLeftRadius: getBorderRadius(24),
-    borderTopRightRadius: getBorderRadius(24),
-    maxHeight: screenHeight * 0.9,
-    minHeight: screenHeight * 0.6,
+    borderRadius: getBorderRadius(24),
+    width: '98%',
+    maxHeight: screenHeight * 0.92,
+    minHeight: screenHeight * 0.85,
     ...getShadowSize(-10, 20, 0.3),
     borderWidth: getBorderWidth(2),
     borderColor: Colors.border,
-    borderBottomWidth: 0,
-    paddingBottom: Platform.OS === 'ios' ? scaleSize(100) : getSpacing(80), // Espacio para los botones fijos
+    paddingBottom: Platform.OS === 'ios' ? scaleSize(100) : getSpacing(80), // Aumentado el espacio para los botones
   },
-  header: {
+  fixedTopContainer: {
     backgroundColor: Colors.primary,
-    paddingTop: getSpacing(8),
-    paddingBottom: getSpacing(20),
-    paddingHorizontal: getSpacing(24),
+    paddingHorizontal: getSpacing(28),
+    paddingVertical: getSpacing(4),
     borderTopLeftRadius: getBorderRadius(24),
     borderTopRightRadius: getBorderRadius(24),
-    alignItems: 'center',
-  },
-  modalIndicator: {
-    width: scaleSize(40),
-    height: scaleSize(4),
-    backgroundColor: 'rgba(26, 26, 26, 0.3)',
-    borderRadius: getBorderRadius(2),
-    marginBottom: getSpacing(16),
-  },
-  title: {
-    fontSize: getTitleFontSize(24),
-    fontWeight: '700',
-    color: Colors.textDark,
-    marginBottom: getSpacing(8),
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: scaleSize(14),
-    color: 'rgba(26, 26, 26, 0.8)',
-    textAlign: 'center',
   },
   scrollContainer: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
   scrollContent: {
-    paddingHorizontal: getSpacing(24),
+    paddingHorizontal: getSpacing(28),
     paddingTop: getSpacing(24),
-    paddingBottom: getSpacing(20), // Reducido porque el contenedor ya tiene paddingBottom
-    minHeight: screenHeight * 0.4,
+    paddingBottom: getSpacing(32), // Aumentado para dar más espacio a los botones
+    minHeight: screenHeight * 0.6,
   },
   actionButtonsContainer: {
     position: 'absolute',
@@ -180,9 +161,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: getSpacing(24),
-    paddingVertical: getSpacing(20),
-    paddingBottom: Platform.OS === 'ios' ? scaleSize(34) : getSpacing(20), // Safe area para iOS
+    paddingHorizontal: getSpacing(28),
+    paddingVertical: getSpacing(16),
+    paddingBottom: Platform.OS === 'ios' ? scaleSize(24) : getSpacing(16), // Reducido el safe area
     borderTopWidth: getBorderWidth(),
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
     flexDirection: 'row',
