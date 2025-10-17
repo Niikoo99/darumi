@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
@@ -20,6 +20,8 @@ const BalanceProgressCard = ({
   spentMoney, 
   currency = '$' 
 }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  
   // El dinero disponible es la suma de ingresos
   const effectiveAvailableMoney = availableMoney;
   const percentage = effectiveAvailableMoney > 0 ? (spentMoney / effectiveAvailableMoney) * 100 : 0;
@@ -40,12 +42,26 @@ const BalanceProgressCard = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Balance del Mes</Text>
-        <AutoScaleCurrencyText 
-          value={balance} 
-          variant="balance"
-          style={{ color: getBalanceColor() }}
-          testID="balance-amount"
-        />
+        <View style={styles.headerRight}>
+          <AutoScaleCurrencyText 
+            value={balance} 
+            variant="balance"
+            style={{ color: getBalanceColor() }}
+            testID="balance-amount"
+            isVisible={isVisible}
+          />
+          <TouchableOpacity 
+            style={styles.eyeButton}
+            onPress={() => setIsVisible(!isVisible)}
+            testID="toggle-visibility"
+          >
+            <FontAwesome5 
+              name={isVisible ? 'eye' : 'eye-slash'} 
+              size={scaleSize(20)} 
+              color={Colors.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       
       <View style={styles.progressSection}>
@@ -56,6 +72,7 @@ const BalanceProgressCard = ({
             variant="small"
             style={styles.progressValue}
             testID="available-money"
+            isVisible={isVisible}
           />
         </View>
         
@@ -79,6 +96,7 @@ const BalanceProgressCard = ({
             variant="small"
             style={{ color: Colors.danger }}
             testID="spent-money"
+            isVisible={isVisible}
           />
         </Text>
       </View>
@@ -99,6 +117,17 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: getSpacing(20),
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getSpacing(12),
+  },
+  eyeButton: {
+    padding: getSpacing(8),
+    borderRadius: getBorderRadius(8),
+    backgroundColor: Colors.borderLight,
   },
   title: {
     fontSize: getBodyFontSize(),

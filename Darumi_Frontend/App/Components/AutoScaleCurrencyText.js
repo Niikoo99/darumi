@@ -20,6 +20,7 @@ import Colors from '../../assets/shared/Colors';
  * @param {number} [props.maxFontSize] - Tamaño máximo de fuente
  * @param {Object} [props.style] - Estilos adicionales
  * @param {string} [props.testID] - ID para testing
+ * @param {boolean} [props.isVisible=true] - Si el valor debe ser visible o oculto
  */
 const AutoScaleCurrencyText = ({
   value,
@@ -28,6 +29,7 @@ const AutoScaleCurrencyText = ({
   maxFontSize,
   style,
   testID,
+  isVisible = true,
 }) => {
   // Validar minScale
   const validMinScale = Math.max(0.1, Math.min(1.0, minScale));
@@ -51,6 +53,11 @@ const AutoScaleCurrencyText = ({
 
   // Formatear el valor como moneda argentina
   const formatCurrencyValue = (val) => {
+    if (!isVisible) {
+      // Mostrar asteriscos cuando está oculto
+      return '••••••••';
+    }
+    
     const numberValue = typeof val === 'number' ? val : 0;
     
     // Usar Intl.NumberFormat con style: 'currency' para formato consistente

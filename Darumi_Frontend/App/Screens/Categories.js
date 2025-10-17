@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Animated, Modal, TextInput, Alert } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../assets/shared/Colors';
@@ -26,18 +26,28 @@ import {
   getBorderWidth, 
   getGap, 
   getMinWidth, 
-  getMaxWidth 
+  getMaxWidth,
+  getFloatingButtonSize,
+  getModalSize,
+  getInputSize
 } from '../../utils/scaling';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editCategoryName, setEditCategoryName] = useState('');
   const { isSignedIn, user } = useUser();
   
   // Animaciones
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const fabScaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchCategories();
@@ -53,6 +63,13 @@ export default function Categories() {
         toValue: 1,
         tension: 50,
         friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.spring(fabScaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        delay: 300,
         useNativeDriver: true,
       }),
     ]).start();
@@ -103,6 +120,118 @@ export default function Categories() {
     return colors[index % colors.length];
   };
 
+  // Filtrar categorías por búsqueda
+  const filteredCategories = categories.filter(category =>
+    category.Nombre_categoria.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Funciones para manejar categorías
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      Alert.alert('Error', 'Por favor ingresa un nombre para la categoría');
+      return;
+    }
+
+    try {
+      const response = await axios.post(buildApiUrl(getEndpoints().CATEGORIES + '/'), {
+        Nombre_categoria: newCategoryName.trim()
+      });
+      
+      setCategories([...categories, response.data]);
+      setNewCategoryName('');
+      setShowAddModal(false);
+      Alert.alert('Éxito', 'Categoría creada exitosamente');
+    } catch (error) {
+      console.error('Error adding category:', error);
+      
+      if (error.response?.status === 400) {
+        Alert.alert('Error', error.response.data.error || 'Datos inválidos');
+      } else if (error.response?.status === 409) {
+        Alert.alert('Error', 'Ya existe una categoría con ese nombre');
+      } else {
+        Alert.alert('Error', 'No se pudo crear la categoría. Inténtalo de nuevo.');
+      }
+    }
+  };
+
+  const handleEditCategory = async () => {
+    if (!editCategoryName.trim()) {
+      Alert.alert('Error', 'Por favor ingresa un nombre para la categoría');
+      return;
+    }
+
+    try {
+      const response = await axios.put(buildApiUrl(getEndpoints().CATEGORIES + '/' + editingCategory.Id_categoria), {
+        Nombre_categoria: editCategoryName.trim()
+      });
+      
+      setCategories(categories.map(cat => 
+        cat.Id_categoria === editingCategory.Id_categoria 
+          ? response.data
+          : cat
+      ));
+      setEditCategoryName('');
+      setEditingCategory(null);
+      setShowEditModal(false);
+      Alert.alert('Éxito', 'Categoría actualizada exitosamente');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      
+      if (error.response?.status === 400) {
+        Alert.alert('Error', error.response.data.error || 'Datos inválidos');
+      } else if (error.response?.status === 404) {
+        Alert.alert('Error', 'La categoría no fue encontrada');
+      } else if (error.response?.status === 409) {
+        Alert.alert('Error', 'Ya existe una categoría con ese nombre');
+      } else {
+        Alert.alert('Error', 'No se pudo actualizar la categoría. Inténtalo de nuevo.');
+      }
+    }
+  };
+
+  const handleDeleteCategory = (category) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      `¿Estás seguro de que quieres eliminar la categoría "${category.Nombre_categoria}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await axios.delete(buildApiUrl(getEndpoints().CATEGORIES + '/' + category.Id_categoria));
+              setCategories(categories.filter(cat => cat.Id_categoria !== category.Id_categoria));
+              Alert.alert('Éxito', 'Categoría eliminada exitosamente');
+            } catch (error) {
+              console.error('Error deleting category:', error);
+              
+              // Manejar diferentes tipos de errores
+              if (error.response?.status === 400) {
+                const errorMessage = error.response.data.error;
+                const usageCount = error.response.data.usageCount;
+                Alert.alert(
+                  'No se puede eliminar', 
+                  `${errorMessage}. Esta categoría tiene ${usageCount} transacción(es) asociada(s).`
+                );
+              } else if (error.response?.status === 404) {
+                Alert.alert('Error', 'La categoría no fue encontrada');
+              } else {
+                Alert.alert('Error', 'No se pudo eliminar la categoría. Inténtalo de nuevo.');
+              }
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const openEditModal = (category) => {
+    setEditingCategory(category);
+    setEditCategoryName(category.Nombre_categoria);
+    setShowEditModal(true);
+  };
+
   const renderCategoryCard = ({ item, index }) => {
     const iconName = getCategoryIcon(item.Nombre_categoria);
     const categoryColor = getCategoryColor(index);
@@ -110,25 +239,43 @@ export default function Categories() {
     return (
       <Animated.View
         style={[
-          styles.categoryCard,
+          styles.modernCategoryCard,
           {
-            borderColor: categoryColor,
             transform: [{ scale: scaleAnim }],
             opacity: fadeAnim,
           },
         ]}
       >
-        <TouchableOpacity
-          style={styles.categoryContent}
-          onPress={() => setSelectedCategory(item)}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}20` }]}>
-            <FontAwesome5 name={iconName} size={24} color={categoryColor} />
+        <View style={styles.cardContent}>
+          {/* Left side - Icon and color indicator */}
+          <View style={styles.cardLeft}>
+            <View style={[styles.categoryIconContainer, { backgroundColor: `${categoryColor}20` }]}>
+              <FontAwesome5 name={iconName} size={getIconSize(20)} color={categoryColor} />
+            </View>
+            <View style={styles.categoryInfo}>
+              <Text style={styles.categoryName}>{item.Nombre_categoria}</Text>
+              <Text style={styles.categoryId}>ID: {item.Id_categoria}</Text>
+            </View>
           </View>
-          <Text style={styles.categoryName}>{item.Nombre_categoria}</Text>
-          <Text style={styles.categoryId}>ID: {item.Id_categoria}</Text>
-        </TouchableOpacity>
+          
+          {/* Right side - Action buttons */}
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => openEditModal(item)}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="edit" size={getIconSize(14)} color={Colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={() => handleDeleteCategory(item)}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="trash" size={getIconSize(14)} color={Colors.danger} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </Animated.View>
     );
   };
@@ -145,91 +292,194 @@ export default function Categories() {
     <View style={styles.container}>
       {/* Header Gamificado */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>📂 Mis Categorías</Text>
-        <Text style={styles.headerSubtitle}>Organiza tus gastos por categoría</Text>
+        <Text style={styles.headerTitle}>📂 Gestión de Categorías</Text>
+        <Text style={styles.headerSubtitle}>Organiza y administra tus categorías</Text>
       </View>
 
       {/* Stats Bar */}
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{categories.length}</Text>
-          <Text style={styles.statLabel}>Categorías</Text>
+          <Text style={styles.statLabel}>Total</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>8</Text>
-          <Text style={styles.statLabel}>Activas</Text>
+          <Text style={styles.statNumber}>{filteredCategories.length}</Text>
+          <Text style={styles.statLabel}>Mostradas</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>2</Text>
-          <Text style={styles.statLabel}>Nuevas</Text>
+          <Text style={styles.statNumber}>{categories.length - filteredCategories.length}</Text>
+          <Text style={styles.statLabel}>Filtradas</Text>
         </View>
       </View>
 
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <FontAwesome5 name="search" size={getIconSize(16)} color={Colors.textSecondary} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar categorías..."
+          placeholderTextColor={Colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      {/* Categories List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Todas las Categorías</Text>
+          <Text style={styles.sectionTitle}>
+            {searchQuery ? `Resultados para "${searchQuery}"` : 'Todas las Categorías'}
+          </Text>
           
           <FlatList
-            data={categories}
+            data={filteredCategories}
             renderItem={renderCategoryCard}
             keyExtractor={(item) => item.Id_categoria.toString()}
-            numColumns={2}
             scrollEnabled={false}
-            columnWrapperStyle={styles.categoryRow}
-            contentContainerStyle={styles.categoryGrid}
+            contentContainerStyle={styles.categoriesList}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
           />
 
-          {/* Categoría Seleccionada */}
-          {selectedCategory && (
-            <Animated.View
-              style={[
-                styles.selectedCategoryCard,
-                {
-                  transform: [{ scale: scaleAnim }],
-                  opacity: fadeAnim,
-                },
-              ]}
-            >
-              <View style={styles.selectedHeader}>
-                <FontAwesome5 
-                  name={getCategoryIcon(selectedCategory.Nombre_categoria)} 
-                  size={32} 
-                  color={Colors.primary} 
-                />
-                <Text style={styles.selectedTitle}>{selectedCategory.Nombre_categoria}</Text>
-              </View>
-              <Text style={styles.selectedDescription}>
-                Esta categoría te ayuda a organizar tus gastos relacionados con {selectedCategory.Nombre_categoria.toLowerCase()}.
+          {filteredCategories.length === 0 && (
+            <View style={styles.emptyState}>
+              <FontAwesome5 name="search" size={getIconSize(48)} color={Colors.textSecondary} />
+              <Text style={styles.emptyStateText}>
+                {searchQuery ? 'No se encontraron categorías' : 'No hay categorías disponibles'}
               </Text>
-              <View style={styles.selectedStats}>
-                <View style={styles.selectedStat}>
-                  <Text style={styles.selectedStatNumber}>12</Text>
-                  <Text style={styles.selectedStatLabel}>Transacciones</Text>
-                </View>
-                <View style={styles.selectedStat}>
-                  <Text style={styles.selectedStatNumber}>{formatCurrency(2450)}</Text>
-                  <Text style={styles.selectedStatLabel}>Total</Text>
-                </View>
-              </View>
-            </Animated.View>
-          )}
-
-          {/* Acciones Rápidas */}
-          <View style={styles.quickActions}>
-            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <FontAwesome5 name="plus" size={20} color={Colors.white} />
-                <Text style={styles.actionButtonText}>Nueva Categoría</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <FontAwesome5 name="edit" size={20} color={Colors.white} />
-                <Text style={styles.actionButtonText}>Editar</Text>
-              </TouchableOpacity>
+              <Text style={styles.emptyStateSubtext}>
+                {searchQuery ? 'Intenta con otro término de búsqueda' : 'Agrega tu primera categoría'}
+              </Text>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <Animated.View
+        style={[
+          styles.fabContainer,
+          {
+            transform: [{ scale: fabScaleAnim }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowAddModal(true)}
+          activeOpacity={0.8}
+        >
+          <FontAwesome5 name="plus" size={getIconSize(24)} color={Colors.textDark} />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Add Category Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showAddModal}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                transform: [{ scale: scaleAnim }],
+                opacity: fadeAnim,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>➕ Nueva Categoría</Text>
+              <Text style={styles.modalSubtitle}>Crea una nueva categoría para organizar tus gastos</Text>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Nombre de la categoría"
+                placeholderTextColor={Colors.textSecondary}
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                autoFocus={true}
+              />
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => {
+                    setShowAddModal(false);
+                    setNewCategoryName('');
+                  }}
+                >
+                  <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalConfirmButton}
+                  onPress={handleAddCategory}
+                >
+                  <Text style={styles.modalConfirmButtonText}>Crear</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      {/* Edit Category Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showEditModal}
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                transform: [{ scale: scaleAnim }],
+                opacity: fadeAnim,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>✏️ Editar Categoría</Text>
+              <Text style={styles.modalSubtitle}>Modifica el nombre de la categoría</Text>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Nombre de la categoría"
+                placeholderTextColor={Colors.textSecondary}
+                value={editCategoryName}
+                onChangeText={setEditCategoryName}
+                autoFocus={true}
+              />
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => {
+                    setShowEditModal(false);
+                    setEditCategoryName('');
+                    setEditingCategory(null);
+                  }}
+                >
+                  <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalConfirmButton}
+                  onPress={handleEditCategory}
+                >
+                  <Text style={styles.modalConfirmButtonText}>Guardar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -250,6 +500,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
     opacity: 0.7,
   },
+  
+  // Header Styles (matching UsualPayment and Achievement)
   header: {
     backgroundColor: Colors.primary,
     ...getHeaderSize(),
@@ -266,6 +518,30 @@ const styles = StyleSheet.create({
     color: Colors.textDark,
     opacity: 0.8,
   },
+  
+  // Search Bar Styles
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: getBorderRadius(12),
+    paddingHorizontal: getSpacing(16),
+    paddingVertical: getSpacing(12),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginHorizontal: getHorizontalPadding(),
+    marginBottom: getSpacing(16),
+  },
+  searchIcon: {
+    marginRight: getSpacing(12),
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: getBodyFontSize(),
+    color: Colors.text,
+  },
+  
+  // Stats Bar Styles (matching UsualPayment and Achievement)
   statsBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -287,114 +563,187 @@ const styles = StyleSheet.create({
     fontSize: getSmallFontSize(),
     color: Colors.textSecondary,
   },
+  
+  // Scroll and Content Styles
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: getHorizontalPadding(),
+    paddingHorizontal: getHorizontalPadding(),
+    paddingBottom: getSpacing(100), // Space for FAB
   },
   sectionTitle: {
     fontSize: getTitleFontSize(20),
     fontWeight: '600',
-    color: Colors.primary,
+    color: Colors.text,
     marginBottom: getSpacing(16),
+    marginTop: getSpacing(8),
   },
-  categoryGrid: {
-    paddingBottom: getSpacing(20),
-  },
-  categoryRow: {
-    justifyContent: 'space-between',
-    marginBottom: getSpacing(16),
-  },
-  categoryCard: {
-    flex: 1,
+  
+  // Modern Category Card Styles
+  modernCategoryCard: {
     backgroundColor: Colors.backgroundCard,
-    borderWidth: getBorderWidth(),
-    borderRadius: getBorderRadius(),
-    marginHorizontal: getSpacing(8),
-    overflow: 'hidden',
+    borderRadius: getBorderRadius(16),
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    ...getShadowSize(2, 8, 0.1),
   },
-  categoryContent: {
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: getSpacing(20),
+  },
+  cardLeft: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  iconContainer: {
-    ...getIconContainerSize(60),
+  categoryIconContainer: {
+    ...getIconContainerSize(48),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: getSpacing(12),
+    marginRight: getSpacing(16),
+  },
+  categoryInfo: {
+    flex: 1,
   },
   categoryName: {
-    fontSize: getBodyFontSize(),
+    fontSize: getBodyFontSize(16),
     fontWeight: '600',
     color: Colors.text,
-    textAlign: 'center',
-    marginBottom: getSpacing(4),
+    marginBottom: getSpacing(2),
   },
   categoryId: {
     fontSize: getSmallFontSize(),
     color: Colors.textSecondary,
   },
-  selectedCategoryCard: {
-    backgroundColor: Colors.backgroundCard,
-    borderWidth: getBorderWidth(),
-    borderColor: Colors.primary,
-    borderRadius: getBorderRadius(),
-    padding: getSpacing(20),
-    marginTop: getSpacing(20),
-  },
-  selectedHeader: {
+  cardActions: {
     flexDirection: 'row',
+    gap: getSpacing(8),
+  },
+  actionButton: {
+    ...getIconContainerSize(36),
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: getSpacing(16),
+    borderRadius: getBorderRadius(8),
   },
-  selectedTitle: {
-    fontSize: getTitleFontSize(24),
-    fontWeight: '700',
-    color: Colors.primary,
-    marginLeft: getSpacing(16),
+  editButton: {
+    backgroundColor: `${Colors.primary}20`,
   },
-  selectedDescription: {
+  deleteButton: {
+    backgroundColor: `${Colors.danger}20`,
+  },
+  
+  // List Styles
+  categoriesList: {
+    paddingBottom: getSpacing(20),
+  },
+  separator: {
+    height: getSpacing(12),
+  },
+  
+  // Empty State Styles
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: getSpacing(40),
+  },
+  emptyStateText: {
+    fontSize: getBodyFontSize(16),
+    fontWeight: '600',
+    color: Colors.text,
+    marginTop: getSpacing(16),
+    marginBottom: getSpacing(8),
+  },
+  emptyStateSubtext: {
     fontSize: getBodyFontSize(),
     color: Colors.textSecondary,
-    lineHeight: scaleSize(20),
-    marginBottom: getSpacing(16),
+    textAlign: 'center',
   },
-  selectedStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  
+  // Floating Action Button Styles
+  fabContainer: {
+    position: 'absolute',
+    bottom: getSpacing(24),
+    right: getHorizontalPadding(),
+    zIndex: 1000,
   },
-  selectedStat: {
+  fab: {
+    ...getFloatingButtonSize(60),
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
     alignItems: 'center',
+    ...getShadowSize(4, 12, 0.3),
   },
-  selectedStatNumber: {
-    fontSize: getBodyFontSize(),
+  
+  // Modal Styles
+  modalBackground: {
+    flex: 1,
+    backgroundColor: Colors.backgroundModal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: getHorizontalPadding(),
+  },
+  modalContainer: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: getBorderRadius(20),
+    width: '100%',
+    maxWidth: scaleSize(400),
+    ...getShadowSize(8, 20, 0.3),
+  },
+  modalHeader: {
+    padding: getSpacing(24),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  modalTitle: {
+    fontSize: getTitleFontSize(20),
     fontWeight: '700',
     color: Colors.primary,
     marginBottom: getSpacing(4),
-    textAlign: 'center',
-    flexWrap: 'wrap',
   },
-  selectedStatLabel: {
-    fontSize: getSmallFontSize(),
+  modalSubtitle: {
+    fontSize: getBodyFontSize(),
     color: Colors.textSecondary,
   },
-  quickActions: {
-    marginTop: getSpacing(32),
+  modalContent: {
+    padding: getSpacing(24),
   },
-  actionButtons: {
+  modalInput: {
+    ...getInputSize(),
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    color: Colors.text,
+    marginBottom: getSpacing(24),
+  },
+  modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    gap: getSpacing(12),
   },
-  actionButton: {
-    backgroundColor: Colors.primary,
+  modalCancelButton: {
+    flex: 1,
     ...getButtonSize(),
-    borderRadius: getBorderRadius(),
-    flexDirection: 'row',
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: getBorderRadius(12),
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: getGap(8),
   },
-  actionButtonText: {
+  modalCancelButtonText: {
+    fontSize: getBodyFontSize(),
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    ...getButtonSize(),
+    backgroundColor: Colors.primary,
+    borderRadius: getBorderRadius(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalConfirmButtonText: {
     fontSize: getBodyFontSize(),
     fontWeight: '600',
     color: Colors.textDark,
