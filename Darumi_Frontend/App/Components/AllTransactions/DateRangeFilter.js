@@ -90,7 +90,7 @@ const DateRangeFilter = ({ dateRange, onDateRangeChange }) => {
         style={styles.dateButton}
         onPress={() => setShowModal(true)}
       >
-        <FontAwesome5 name="calendar-alt" size={getIconSize(16)} color={Colors.primary} />
+        <FontAwesome5 name="calendar-alt" size={getIconSize(14)} color={Colors.primary} />
         <Text style={styles.dateButtonText}>{formatDateRange()}</Text>
         <FontAwesome5 name="chevron-down" size={getIconSize(12)} color={Colors.primary} />
       </TouchableOpacity>
@@ -146,16 +146,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: getSpacing(16),
-    paddingVertical: getSpacing(12),
-    borderRadius: getBorderRadius(12),
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(10), // Reducido de 12
+    borderRadius: getBorderRadius(10), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
     marginBottom: getSpacing(8),
   },
   dateButtonText: {
     flex: 1,
-    marginLeft: getSpacing(12),
+    marginLeft: getSpacing(8), // Reducido de 12
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '500',

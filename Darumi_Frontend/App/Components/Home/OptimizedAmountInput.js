@@ -10,8 +10,11 @@ import {
   getSpacing, 
   getShadowSize,
   getBorderWidth,
-  getMinWidth
+  // getMinWidth // Temporarily commented out
 } from '../../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 const PremiumAmountInput = ({ value, onChangeText, isExpense, placeholder = "0" }) => {
   const [isFocused, setIsFocused] = useState(false);

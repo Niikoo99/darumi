@@ -30,12 +30,15 @@ import {
   getBorderWidth,
   getIconSize,
   getMaxWidth,
-  getMinWidth,
+  // getMinWidth, // Temporarily commented out
   getMinHeight,
   getGap,
   getHorizontalPadding,
   getVerticalPadding,
 } from '../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -424,7 +427,7 @@ export default function AllTransactions({ navigation }) {
                   ]}
                   onPress={() => setSelectedType('all')}
                 >
-                  <FontAwesome5 name="list" size={getIconSize(16)} color={selectedType === 'all' ? Colors.textDark : Colors.textSecondary} />
+                  <FontAwesome5 name="list" size={getIconSize(14)} color={selectedType === 'all' ? Colors.textDark : Colors.textSecondary} />
                   <Text style={[
                     styles.typeFilterText,
                     selectedType === 'all' && styles.typeFilterTextActive
@@ -440,7 +443,7 @@ export default function AllTransactions({ navigation }) {
                   ]}
                   onPress={() => setSelectedType('gasto')}
                 >
-                  <FontAwesome5 name="arrow-down" size={getIconSize(16)} color={selectedType === 'gasto' ? Colors.textDark : Colors.danger} />
+                  <FontAwesome5 name="arrow-down" size={getIconSize(14)} color={selectedType === 'gasto' ? Colors.textDark : Colors.danger} />
                   <Text style={[
                     styles.typeFilterText,
                     selectedType === 'gasto' && styles.typeFilterTextActive
@@ -456,7 +459,7 @@ export default function AllTransactions({ navigation }) {
                   ]}
                   onPress={() => setSelectedType('ingreso')}
                 >
-                  <FontAwesome5 name="arrow-up" size={getIconSize(16)} color={selectedType === 'ingreso' ? Colors.textDark : Colors.success} />
+                  <FontAwesome5 name="arrow-up" size={getIconSize(14)} color={selectedType === 'ingreso' ? Colors.textDark : Colors.success} />
                   <Text style={[
                     styles.typeFilterText,
                     selectedType === 'ingreso' && styles.typeFilterTextActive
@@ -477,7 +480,7 @@ export default function AllTransactions({ navigation }) {
                   setShowCategoryModal(true);
                 }}
               >
-                <FontAwesome5 name="tags" size={getIconSize(16)} color={Colors.primary} />
+                <FontAwesome5 name="tags" size={getIconSize(14)} color={Colors.primary} />
                 <Text style={styles.categoryFilterText}>
                   {selectedCategory || 'Todas las categorías'}
                 </Text>
@@ -490,7 +493,7 @@ export default function AllTransactions({ navigation }) {
               <Text style={styles.filterSectionTitle}>Rango de Monto</Text>
               <View style={styles.amountInputsContainer}>
                 <View style={styles.amountInputWrapper}>
-                  <FontAwesome5 name="dollar-sign" size={getIconSize(16)} color={Colors.primary} />
+                  <FontAwesome5 name="dollar-sign" size={getIconSize(14)} color={Colors.primary} />
                   <TextInput
                     style={styles.amountInput}
                     placeholder="Mínimo"
@@ -502,7 +505,7 @@ export default function AllTransactions({ navigation }) {
                 </View>
                 <Text style={styles.amountSeparator}>-</Text>
                 <View style={styles.amountInputWrapper}>
-                  <FontAwesome5 name="dollar-sign" size={getIconSize(16)} color={Colors.primary} />
+                  <FontAwesome5 name="dollar-sign" size={getIconSize(14)} color={Colors.primary} />
                   <TextInput
                     style={styles.amountInput}
                     placeholder="Máximo"
@@ -541,7 +544,7 @@ export default function AllTransactions({ navigation }) {
                   onPress={() => setSortBy('date')}
                 >
                   <View style={styles.sortOptionLeft}>
-                    <FontAwesome5 name="calendar-alt" size={getIconSize(16)} color={sortBy === 'date' ? Colors.primary : Colors.textSecondary} />
+                    <FontAwesome5 name="calendar-alt" size={getIconSize(14)} color={sortBy === 'date' ? Colors.primary : Colors.textSecondary} />
                     <Text style={[
                       styles.sortOptionText,
                       sortBy === 'date' && styles.sortOptionTextActive
@@ -550,7 +553,7 @@ export default function AllTransactions({ navigation }) {
                     </Text>
                   </View>
                   {sortBy === 'date' && (
-                    <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.primary} />
+                    <FontAwesome5 name="check" size={getIconSize(14)} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
 
@@ -562,7 +565,7 @@ export default function AllTransactions({ navigation }) {
                   onPress={() => setSortBy('amount')}
                 >
                   <View style={styles.sortOptionLeft}>
-                    <FontAwesome5 name="dollar-sign" size={getIconSize(16)} color={sortBy === 'amount' ? Colors.primary : Colors.textSecondary} />
+                    <FontAwesome5 name="dollar-sign" size={getIconSize(14)} color={sortBy === 'amount' ? Colors.primary : Colors.textSecondary} />
                     <Text style={[
                       styles.sortOptionText,
                       sortBy === 'amount' && styles.sortOptionTextActive
@@ -571,7 +574,7 @@ export default function AllTransactions({ navigation }) {
                     </Text>
                   </View>
                   {sortBy === 'amount' && (
-                    <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.primary} />
+                    <FontAwesome5 name="check" size={getIconSize(14)} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -589,7 +592,7 @@ export default function AllTransactions({ navigation }) {
                   >
                     <FontAwesome5 
                       name="arrow-down" 
-                      size={getIconSize(14)} 
+                      size={getIconSize(12)} 
                       color={sortOrder === 'desc' ? Colors.textDark : Colors.textSecondary} 
                     />
                     <Text style={[
@@ -609,7 +612,7 @@ export default function AllTransactions({ navigation }) {
                   >
                     <FontAwesome5 
                       name="arrow-up" 
-                      size={getIconSize(14)} 
+                      size={getIconSize(12)} 
                       color={sortOrder === 'asc' ? Colors.textDark : Colors.textSecondary} 
                     />
                     <Text style={[
@@ -776,7 +779,7 @@ export default function AllTransactions({ navigation }) {
               <Text style={styles.filterSectionTitle}>Rango de Monto</Text>
               <View style={styles.amountInputsContainer}>
                 <View style={styles.amountInputWrapper}>
-                  <FontAwesome5 name="dollar-sign" size={getIconSize(16)} color={Colors.primary} />
+                  <FontAwesome5 name="dollar-sign" size={getIconSize(14)} color={Colors.primary} />
                   <TextInput
                     style={styles.amountInput}
                     placeholder="Mínimo"
@@ -788,7 +791,7 @@ export default function AllTransactions({ navigation }) {
                 </View>
                 <Text style={styles.amountSeparator}>-</Text>
                 <View style={styles.amountInputWrapper}>
-                  <FontAwesome5 name="dollar-sign" size={getIconSize(16)} color={Colors.primary} />
+                  <FontAwesome5 name="dollar-sign" size={getIconSize(14)} color={Colors.primary} />
                   <TextInput
                     style={styles.amountInput}
                     placeholder="Máximo"
@@ -1299,58 +1302,58 @@ const styles = StyleSheet.create({
   },
   fullScreenModalHeader: {
     backgroundColor: Colors.backgroundSecondary,
-    paddingTop: getSpacing(50),
-    paddingBottom: getSpacing(20),
-    paddingHorizontal: getSpacing(20),
+    paddingTop: getSpacing(10), // Reducido de 20
+    paddingBottom: getSpacing(8), // Reducido de 12
+    paddingHorizontal: getSpacing(12), // Reducido de 16
     borderBottomWidth: getBorderWidth(),
     borderBottomColor: Colors.border,
   },
   modalHeaderTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: getSpacing(12),
+    marginBottom: getSpacing(4), // Reducido de 8
   },
   modalBackButton: {
-    padding: getSpacing(8),
-    marginRight: getSpacing(12),
+    padding: getSpacing(4), // Reducido de 6
+    marginRight: getSpacing(6), // Reducido de 8
   },
   fullScreenModalTitle: {
-    fontSize: getTitleFontSize(20),
+    fontSize: getTitleFontSize(16), // Reducido de 18
     fontWeight: '700',
     color: Colors.text,
     flex: 1,
   },
   modalHeaderSpacer: {
-    width: getSpacing(40),
+    width: getSpacing(24), // Reducido de 32
   },
   activeFiltersIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundCard,
-    paddingHorizontal: getSpacing(12),
-    paddingVertical: getSpacing(6),
-    borderRadius: getBorderRadius(16),
+    paddingHorizontal: getSpacing(8), // Reducido de 10
+    paddingVertical: getSpacing(3), // Reducido de 4
+    borderRadius: getBorderRadius(10), // Reducido de 12
     alignSelf: 'flex-start',
   },
   activeFiltersText: {
-    fontSize: scaleSize(12),
+    fontSize: scaleSize(10), // Reducido de 11
     color: Colors.primary,
     fontWeight: '600',
-    marginLeft: getSpacing(6),
+    marginLeft: getSpacing(3), // Reducido de 4
   },
   fullScreenModalScroll: {
     flex: 1,
   },
   fullScreenModalScrollContent: {
-    paddingHorizontal: getSpacing(20),
-    paddingVertical: getSpacing(20),
-    paddingBottom: getSpacing(100), // Espacio para botones fijos
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(12), // Reducido de 16
+    paddingBottom: getSpacing(80), // Reducido de 100
   },
   filterCard: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: getBorderRadius(16),
-    padding: getSpacing(20),
-    marginBottom: getSpacing(16),
+    borderRadius: getBorderRadius(10), // Reducido de 12
+    padding: getSpacing(12), // Reducido de 16
+    marginBottom: getSpacing(8), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
     ...getShadowSize(2, 8, 0.1),
@@ -1358,13 +1361,13 @@ const styles = StyleSheet.create({
   filterCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: getSpacing(16),
+    marginBottom: getSpacing(8), // Reducido de 12
   },
   filterCardTitle: {
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '600',
-    marginLeft: getSpacing(12),
+    marginLeft: getSpacing(8), // Reducido de 12
   },
   unifiedFiltersScroll: {
     paddingHorizontal: getSpacing(20),
@@ -1375,13 +1378,13 @@ const styles = StyleSheet.create({
     paddingVertical: getSpacing(16),
   },
   filterSection: {
-    marginBottom: getSpacing(24),
+    marginBottom: getSpacing(12), // Reducido de 16
   },
   filterSectionTitle: {
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '600',
-    marginBottom: getSpacing(12),
+    marginBottom: getSpacing(6), // Reducido de 8
   },
   amountInputsContainer: {
     flexDirection: 'row',
@@ -1393,9 +1396,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background,
-    paddingHorizontal: getSpacing(16),
-    paddingVertical: getSpacing(12),
-    borderRadius: getBorderRadius(12),
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(10), // Reducido de 12
+    borderRadius: getBorderRadius(10), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
   },
@@ -1420,9 +1423,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.background,
-    paddingVertical: getSpacing(12),
-    paddingHorizontal: getSpacing(16),
-    borderRadius: getBorderRadius(12),
+    paddingVertical: getSpacing(10), // Reducido de 12
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    borderRadius: getBorderRadius(10), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
   },
@@ -1434,7 +1437,7 @@ const styles = StyleSheet.create({
     fontSize: getBodyFontSize(),
     color: Colors.textSecondary,
     fontWeight: '500',
-    marginLeft: getSpacing(8),
+    marginLeft: getSpacing(6), // Reducido de 8
   },
   typeFilterTextActive: {
     color: Colors.textDark,
@@ -1444,31 +1447,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background,
-    paddingHorizontal: getSpacing(16),
-    paddingVertical: getSpacing(12),
-    borderRadius: getBorderRadius(12),
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(10), // Reducido de 12
+    borderRadius: getBorderRadius(10), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
   },
   categoryFilterText: {
     flex: 1,
-    marginLeft: getSpacing(12),
+    marginLeft: getSpacing(8), // Reducido de 12
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '500',
   },
   sortOptionsContainer: {
-    marginBottom: getSpacing(16),
+    marginBottom: getSpacing(10), // Reducido de 16
   },
   sortOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: getSpacing(12),
-    paddingHorizontal: getSpacing(16),
+    paddingVertical: getSpacing(8), // Reducido de 12
+    paddingHorizontal: getSpacing(12), // Reducido de 16
     backgroundColor: Colors.background,
-    borderRadius: getBorderRadius(12),
-    marginBottom: getSpacing(8),
+    borderRadius: getBorderRadius(10), // Reducido de 12
+    marginBottom: getSpacing(6), // Reducido de 8
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
   },
@@ -1492,17 +1495,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   sortDirectionContainer: {
-    marginTop: getSpacing(8),
+    marginTop: getSpacing(6), // Reducido de 8
   },
   sortDirectionLabel: {
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '600',
-    marginBottom: getSpacing(12),
+    marginBottom: getSpacing(8), // Reducido de 12
   },
   sortDirectionButtons: {
     flexDirection: 'row',
-    gap: getGap(8),
+    gap: getGap(6), // Reducido de 8
   },
   sortDirectionButton: {
     flex: 1,
@@ -1510,9 +1513,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.background,
-    paddingHorizontal: getSpacing(16),
-    paddingVertical: getSpacing(12),
-    borderRadius: getBorderRadius(12),
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(8), // Reducido de 12
+    borderRadius: getBorderRadius(10), // Reducido de 12
     borderWidth: getBorderWidth(),
     borderColor: Colors.border,
   },
@@ -1524,7 +1527,7 @@ const styles = StyleSheet.create({
     fontSize: getBodyFontSize(),
     color: Colors.textSecondary,
     fontWeight: '500',
-    marginLeft: getSpacing(8),
+    marginLeft: getSpacing(6), // Reducido de 8
   },
   sortDirectionTextActive: {
     color: Colors.textDark,
@@ -1703,19 +1706,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: getSpacing(20),
-    paddingVertical: getSpacing(20),
-    paddingBottom: getSpacing(30),
+    paddingHorizontal: getSpacing(12), // Reducido de 16
+    paddingVertical: getSpacing(8), // Reducido de 12
+    paddingBottom: getSpacing(16), // Reducido de 20
     borderTopWidth: getBorderWidth(),
     borderTopColor: Colors.border,
     flexDirection: 'row',
-    gap: getGap(12),
+    gap: getGap(8), // Reducido de 10
   },
   fullScreenModalClearButton: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingVertical: getSpacing(16),
-    borderRadius: getBorderRadius(12),
+    paddingVertical: getSpacing(10), // Reducido de 12
+    borderRadius: getBorderRadius(8), // Reducido de 10
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: getBorderWidth(),
@@ -1726,13 +1729,13 @@ const styles = StyleSheet.create({
     fontSize: getBodyFontSize(),
     color: Colors.text,
     fontWeight: '600',
-    marginLeft: getSpacing(8),
+    marginLeft: getSpacing(4), // Reducido de 6
   },
   fullScreenModalApplyButton: {
     flex: 2,
     backgroundColor: Colors.primary,
-    paddingVertical: getSpacing(16),
-    borderRadius: getBorderRadius(12),
+    paddingVertical: getSpacing(10), // Reducido de 12
+    borderRadius: getBorderRadius(8), // Reducido de 10
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -1742,6 +1745,6 @@ const styles = StyleSheet.create({
     fontSize: getBodyFontSize(),
     color: Colors.textDark,
     fontWeight: '700',
-    marginLeft: getSpacing(8),
+    marginLeft: getSpacing(4), // Reducido de 6
   },
 });

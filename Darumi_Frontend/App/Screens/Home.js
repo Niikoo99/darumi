@@ -55,13 +55,16 @@ import {
   getShadowSize, 
   getBorderWidth, 
   getGap, 
-  getMinWidth, 
+  // getMinWidth, // Temporarily commented out
   getMaxWidth, 
   getLineHeight, 
   getMinHeight, 
   getMaxHeight, 
   getFontSize 
 } from '../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 export default function Home() {
   const navigation = useNavigation();

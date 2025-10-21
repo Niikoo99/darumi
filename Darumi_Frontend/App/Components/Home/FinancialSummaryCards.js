@@ -13,8 +13,11 @@ import {
   getBorderWidth,
   getIconSize,
   getGap,
-  getMinWidth
+  // getMinWidth // Temporarily commented out
 } from '../../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 const FinancialSummaryCards = ({ expenses, income, balance, currency = '$' }) => {
   return (

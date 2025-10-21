@@ -16,6 +16,9 @@ import {
   getMaxWidth
 } from '../../../utils/scaling';
 
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
+
 const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEditTransaction, onViewAll }) => {
   // Mapeo de categorías a iconos y colores
   const categoryConfig = {
@@ -58,17 +61,14 @@ const EnhancedTransactionList = ({ transactions = [], onTransactionPress, onEdit
         activeOpacity={0.7}
       >
         <View style={[styles.transactionIcon, { backgroundColor: config.color }]}>
-          <FontAwesome5 name={config.icon} size={getIconSize(20)} color="white" />
+          <FontAwesome5 name={config.icon} size={getIconSize(22)} color="white" />
         </View>
         
         <View style={styles.transactionDetails}>
           <Text style={styles.transactionTitle} numberOfLines={1}>
             {item.Titulo_gasto}
           </Text>
-          <View style={styles.transactionMeta}>
-            <Text style={styles.transactionCategory}>{item.Nombre_categoria}</Text>
-            <Text style={styles.transactionDate}>{formatDate(item.Fecha_creacion_gasto)}</Text>
-          </View>
+          <Text style={styles.transactionDate}>{formatDate(item.Fecha_creacion_gasto)}</Text>
           {item.Detalle_gasto && (
             <Text style={styles.transactionDetail} numberOfLines={1}>
               {item.Detalle_gasto}
@@ -139,67 +139,80 @@ const styles = StyleSheet.create({
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: getSpacing(12),
-    paddingHorizontal: getSpacing(16),
+    paddingVertical: getSpacing(16), // Reducido de 18 a 16
+    paddingHorizontal: getSpacing(16), // Reducido de 18 a 16
     backgroundColor: Colors.backgroundSecondary,
     borderRadius: getBorderRadius(12),
-    marginBottom: getSpacing(8),
+    marginBottom: getSpacing(10), // Reducido de 12 a 10
     borderWidth: getBorderWidth(),
     borderColor: Colors.borderLight,
+    // Sombra sutil
+    ...getShadowSize(1, 2, 0.1),
   },
   transactionIcon: {
-    width: getIconSize(48),
-    height: getIconSize(48),
-    borderRadius: getBorderRadius(24),
+    width: getIconSize(50), // Ligeramente más grande
+    height: getIconSize(50),
+    borderRadius: getBorderRadius(25),
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: getSpacing(16),
+    marginRight: getSpacing(18), // Más separación
+    // Sombra sutil para el ícono
+    ...getShadowSize(2, 4, 0.15),
   },
   transactionDetails: {
     flex: 1,
-    marginRight: getSpacing(12),
+    marginRight: getSpacing(8), // Reducido de 12 a 8 para dar más espacio
+    minWidth: 0, // Permite truncamiento
+    flexShrink: 1, // Permite que se ajuste si es necesario
   },
   transactionTitle: {
-    fontSize: getBodyFontSize(),
-    fontWeight: '600',
+    fontSize: getBodyFontSize(16), // Reducido de 17 a 16
+    fontWeight: '700', // Más bold para destacar
     color: Colors.text,
-    marginBottom: getSpacing(4),
-  },
-  transactionMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: getSpacing(2),
-  },
-  transactionCategory: {
-    fontSize: scaleSize(14),
-    color: Colors.textSecondary,
-    fontWeight: '500',
+    marginBottom: getSpacing(6), // Reducido de 8 a 6
+    lineHeight: getBodyFontSize(16) * 1.2, // Ajustado
   },
   transactionDate: {
-    fontSize: scaleSize(12),
-    color: Colors.textSecondary,
+    fontSize: scaleSize(11), // Reducido de 12 a 11
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '400',
+    marginBottom: getSpacing(4),
+    lineHeight: scaleSize(11) * 1.2, // Mejor control de altura de línea
+    flexShrink: 0, // Evita que se comprima
   },
   transactionDetail: {
-    fontSize: scaleSize(12),
-    color: Colors.textSecondary,
+    fontSize: scaleSize(11),
+    color: 'rgba(255, 255, 255, 0.5)', // Aún más sutil
     fontStyle: 'italic',
+    fontWeight: '300',
   },
   transactionAmount: {
     alignItems: 'flex-end',
-    flexShrink: 1,
-    minWidth: 0,
+    justifyContent: 'center',
+    minWidth: getMinWidth(100), // Reducido de 120 a 100
+    paddingLeft: getSpacing(10), // Reducido de 12 a 10
   },
   amountText: {
-    fontSize: scaleSize(14),
-    fontWeight: '700',
+    fontSize: getBodyFontSize(16), // Reducido de 19 a 16
+    fontWeight: '700', // Reducido de 800 a 700
     textAlign: 'right',
-    maxWidth: getMaxWidth(100),
+    maxWidth: getMaxWidth(110), // Reducido para dar más espacio al texto
+    letterSpacing: 0.5, // Mejor legibilidad de números
+    lineHeight: getBodyFontSize(18) * 1.1,
   },
   expenseAmount: {
     color: Colors.danger,
+    // Sombra sutil para gastos
+    textShadowColor: 'rgba(220, 53, 69, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   incomeAmount: {
     color: Colors.success,
+    // Sombra sutil para ingresos
+    textShadowColor: 'rgba(40, 167, 69, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
 

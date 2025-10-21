@@ -19,9 +19,12 @@ import {
   getShadowSize,
   getBorderWidth,
   getIconSize,
-  getMinWidth,
+  // getMinWidth, // Temporarily commented out
   getMinHeight
 } from '../../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 const { width: screenWidth } = Dimensions.get('window');
 

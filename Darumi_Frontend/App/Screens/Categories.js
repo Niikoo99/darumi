@@ -25,12 +25,15 @@ import {
   getShadowSize, 
   getBorderWidth, 
   getGap, 
-  getMinWidth, 
+  // getMinWidth, // Temporarily commented out
   getMaxWidth,
   getFloatingButtonSize,
   getModalSize,
   getInputSize
 } from '../../utils/scaling';
+
+// Temporary local function to replace getMinWidth
+const getMinWidth = (baseMinWidth = 80) => scaleSize(baseMinWidth);
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
