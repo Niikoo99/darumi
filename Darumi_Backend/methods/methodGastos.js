@@ -10,11 +10,19 @@ const app = express();
 const port = 3000;
 const connection = require('../db');
 const { generarObjetivosPorDefecto, necesitaObjetivosPorDefecto, obtenerDineroDisponible } = require('../services/defaultObjectivesGenerator');
-const { verificarObjetivosCompletados } = require('../services/realTimeObjectiveChecker');
+const { verificarObjetivosInmediatamente } = require('../services/immediateObjectiveChecker');
 
 const gastos = express.Router();
 
 app.use(express.json());
+
+// Socket.IO instance (will be set by main.js)
+let io = null;
+
+// Function to set Socket.IO instance
+function setSocketIO(socketIOInstance) {
+  io = socketIOInstance;
+}
 
 // // GET todos los registros de tabla gastos
 // gastos.get('/gastos', (req, res) => {
@@ -141,18 +149,30 @@ gastos.post('/gastos', (req, res) => {
             }
           }
 
-          // Verificar objetivos completados en tiempo real (para gastos e ingresos)
-          try {
-            console.log(`🔍 Verificando objetivos completados para usuario ${Id_usuario}`);
-            const resultadoVerificacion = await verificarObjetivosCompletados(Id_usuario);
-            
-            if (resultadoVerificacion.completados > 0 || resultadoVerificacion.fallidos > 0) {
-              console.log(`📊 Objetivos actualizados: ${resultadoVerificacion.completados} completados, ${resultadoVerificacion.fallidos} fallidos`);
+          // Verificación inmediata de objetivos de límite de gasto
+          // Solo para gastos negativos (gastos reales, no ingresos)
+          if (Monto_gasto < 0) {
+            try {
+              console.log(`🔍 Ejecutando verificación inmediata de objetivos para gasto de $${Math.abs(Monto_gasto)}`);
+              
+              const resultadoVerificacion = await verificarObjetivosInmediatamente(
+                Id_usuario, 
+                Math.abs(Monto_gasto), // Convertir a valor absoluto
+                Id_categoria, 
+                io
+              );
+              
+              if (resultadoVerificacion.success && resultadoVerificacion.objetivosFallidos > 0) {
+                console.log(`⚠️ ${resultadoVerificacion.objetivosFallidos} objetivos marcados como fallidos inmediatamente`);
+              }
+            } catch (error) {
+              console.error('❌ Error en verificación inmediata de objetivos:', error);
+              // No fallar la transacción principal por este error
             }
-          } catch (error) {
-            console.error('❌ Error verificando objetivos completados:', error);
-            // No fallar la transacción principal por este error
           }
+
+          // NOTA: La verificación de objetivos completados se maneja exclusivamente 
+          // por el cron job mensual (schedulerMetas.js) para optimizar rendimiento
           
           // Devuelve el ID del gasto recién creado
           res.json({ id: results.insertId });
@@ -161,10 +181,6 @@ gastos.post('/gastos', (req, res) => {
     });
   });
   
-module.exports = gastos;
-console.log(`Modulo ${fileName} cargado con exito`);
-
-
 // PUT actualizar gasto
 gastos.put('/gastos/:id', (req, res) => {
   // Obtén los datos actualizados del gasto desde el cuerpo de la solicitud
@@ -197,9 +213,6 @@ gastos.put('/gastos/:id', (req, res) => {
     });
   });
 
-module.exports = gastos;
-console.log(`Módulo ${fileName} cargado con éxito`);
-
 // PUT actualizar campo 'Active' de un gasto
 gastos.put('/gastos/:id/active', (req, res) => {
   // Obtén el ID del gasto desde la URL
@@ -220,5 +233,5 @@ gastos.put('/gastos/:id/active', (req, res) => {
   });
 });
 
-module.exports = gastos;
+module.exports = { gastos, setSocketIO };
 console.log(`Módulo ${fileName} cargado con éxito`);

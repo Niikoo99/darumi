@@ -2,7 +2,6 @@ const { buildSchema, graphql } = require('graphql');
 const express = require('express');
 const connection = require('./db');
 const { generarObjetivosPorDefecto, necesitaObjetivosPorDefecto, obtenerDineroDisponible } = require('./services/defaultObjectivesGenerator');
-const { verificarObjetivosCompletados, verificarTodosLosObjetivosCompletados } = require('./services/realTimeObjectiveChecker');
 const { 
   obtenerCategorias, 
   obtenerTiposObjetivos, 
@@ -28,6 +27,7 @@ const schema = buildSchema(`
     valorObjetivo: Float!
     valorActual: Float!
     categoriaId: Int
+    nombreCategoria: String
   }
 
   type Logro {
@@ -38,6 +38,9 @@ const schema = buildSchema(`
     puntos: Int!
     status: String!
     finalValue: Float
+    valorObjetivo: Float!
+    categoriaId: Int
+    nombreCategoria: String
   }
 
   type ObjetivoGenerado {
@@ -106,24 +109,31 @@ const schema = buildSchema(`
     errores: [String!]
   }
 
+  type EstadisticasUsuario {
+    puntosTotal: Int!
+    rachaActual: Int!
+    objetivosEnProgreso: Int!
+    objetivosCompletados: Int!
+  }
+
   type Query {
     progresoActual(usuarioIdentifier: String!): [ObjetivoProgreso!]!
     historialLogros(usuarioIdentifier: String!): [Logro!]!
-    generarObjetivosPorDefecto(usuarioIdentifier: String!): ResultadoGeneracion!
-    verificarObjetivosCompletados(usuarioIdentifier: String!): ResultadoVerificacion!
     categorias: [Categoria!]!
     tiposObjetivos: [TipoObjetivo!]!
     objetivosPersonalizados(usuarioIdentifier: String!): [ObjetivoPersonalizado!]!
+    estadisticasUsuario(usuarioIdentifier: String!): EstadisticasUsuario
   }
 
   type Mutation {
+    generarObjetivosPorDefecto(usuarioIdentifier: String!): ResultadoGeneracion!
+    
     crearObjetivoPersonalizado(
       usuarioIdentifier: String!
       titulo: String!
       valorObjetivo: Float!
       tipoObjetivo: Int!
       categoriaObjetivo: Int
-      multiplicador: Float
       descripcion: String
     ): ResultadoCreacionObjetivo!
     
@@ -136,61 +146,104 @@ const schema = buildSchema(`
 
 const root = {
   progresoActual: async ({ usuarioIdentifier }) => {
-    const usuarios = await query(`SELECT Id_usuario FROM usuarios WHERE Identifier_usuario = ?`, [usuarioIdentifier]);
-    if (!usuarios.length) return [];
-    const userId = usuarios[0].Id_usuario;
-
-    const metas = await query(`
-      SELECT m.Id_relacion_usuario_objetivo, o.Id_objetivo, o.Titulo_objetivo, o.Valor_objetivo, o.Categoria_objetivo
-      FROM usuarios_y_objetivos m
-      JOIN objetivos o ON o.Id_objetivo = m.Objetivo
-      WHERE m.Usuario = ? AND m.Status = 'En progreso'
-    `, [userId]);
-
-    const now = new Date();
-    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-    const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-    const results = [];
-    for (const m of metas) {
-      let total = 0;
-      if (m.Categoria_objetivo) {
-        const rows = await query(
-          `SELECT COALESCE(SUM(CASE WHEN Monto_gasto < 0 THEN -Monto_gasto ELSE 0 END), 0) as total
-           FROM gastos WHERE Id_usuario = ? AND Categoria_gasto = ? AND Active = 1 AND Fecha_creacion_gasto BETWEEN ? AND ?`,
-          [userId, m.Categoria_objetivo, inicioMes, finMes]
-        );
-        total = rows[0].total || 0;
-      } else {
-        const rows = await query(
-          `SELECT COALESCE(SUM(CASE WHEN Monto_gasto < 0 THEN -Monto_gasto ELSE 0 END), 0) as total
-           FROM gastos WHERE Id_usuario = ? AND Active = 1 AND Fecha_creacion_gasto BETWEEN ? AND ?`,
-          [userId, inicioMes, finMes]
-        );
-        total = rows[0].total || 0;
+    try {
+      console.log(`🔍 GraphQL: Obteniendo progreso actual para usuario ${usuarioIdentifier}`);
+      
+      // 1. Obtener ID del usuario (optimizado con índice)
+      const usuarios = await query(
+        `SELECT Id_usuario FROM usuarios WHERE Identifier_usuario = ?`, 
+        [usuarioIdentifier]
+      );
+      
+      if (!usuarios.length) {
+        console.log(`⚠️ Usuario ${usuarioIdentifier} no encontrado`);
+        return [];
       }
-      results.push({
-        idRelacion: m.Id_relacion_usuario_objetivo,
-        objetivoId: m.Id_objetivo,
-        titulo: m.Titulo_objetivo,
-        valorObjetivo: m.Valor_objetivo,
-        valorActual: total,
-        categoriaId: m.Categoria_objetivo || null,
+      
+      const userId = usuarios[0].Id_usuario;
+      console.log(`👤 Usuario encontrado con ID interno: ${userId}`);
+
+      // 2. Calcular fechas del mes actual (una sola vez)
+      const now = new Date();
+      const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+      const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      
+      console.log(`📅 Período: ${inicioMes.toISOString()} - ${finMes.toISOString()}`);
+
+      // 3. Query ultra-optimizada: usar JOINs en lugar de subconsultas para mejor rendimiento
+      const objetivosConProgreso = await query(`
+        SELECT 
+          m.Id_relacion_usuario_objetivo,
+          o.Id_objetivo,
+          o.Titulo_objetivo,
+          o.Valor_objetivo,
+          o.Categoria_objetivo,
+          c.Nombre_categoria,
+          COALESCE(
+            CASE 
+              WHEN o.Categoria_objetivo IS NOT NULL THEN (
+                SELECT COALESCE(SUM(CASE WHEN g.Monto_gasto < 0 THEN -g.Monto_gasto ELSE 0 END), 0)
+                FROM gastos g
+                WHERE g.Id_usuario = ? 
+                  AND g.Categoria_gasto = o.Categoria_objetivo 
+                  AND g.Active = 1 
+                  AND g.Fecha_creacion_gasto BETWEEN ? AND ?
+              )
+              ELSE (
+                SELECT COALESCE(SUM(CASE WHEN g.Monto_gasto < 0 THEN -g.Monto_gasto ELSE 0 END), 0)
+                FROM gastos g
+                WHERE g.Id_usuario = ? 
+                  AND g.Active = 1 
+                  AND g.Fecha_creacion_gasto BETWEEN ? AND ?
+              )
+            END, 0
+          ) as valorActual
+        FROM usuarios_y_objetivos m
+        INNER JOIN objetivos o ON o.Id_objetivo = m.Objetivo
+        LEFT JOIN categorias c ON c.Id_categoria = o.Categoria_objetivo
+        WHERE m.Usuario = ? AND m.Status IN ('En progreso', 'Fallido')
+        ORDER BY o.Valor_objetivo ASC
+      `, [userId, inicioMes, finMes, userId, inicioMes, finMes, userId]);
+
+      console.log(`📊 Encontrados ${objetivosConProgreso.length} objetivos activos (en progreso y fallidos)`);
+
+      // 4. Transformar resultados al formato esperado por GraphQL
+      const results = objetivosConProgreso.map(obj => {
+        const progreso = {
+          idRelacion: obj.Id_relacion_usuario_objetivo,
+          objetivoId: obj.Id_objetivo,
+          titulo: obj.Titulo_objetivo,
+          valorObjetivo: obj.Valor_objetivo,
+          valorActual: obj.valorActual || 0,
+          categoriaId: obj.Categoria_objetivo || null,
+          nombreCategoria: obj.Nombre_categoria || null,
+        };
+        
+        console.log(`🎯 ${obj.Titulo_objetivo}: $${progreso.valorActual.toLocaleString()} / $${progreso.valorObjetivo.toLocaleString()}`);
+        return progreso;
       });
+
+      console.log(`✅ Progreso actual obtenido exitosamente para ${usuarioIdentifier}`);
+      return results;
+
+    } catch (error) {
+      console.error(`❌ Error obteniendo progreso actual para ${usuarioIdentifier}:`, error);
+      return [];
     }
-    return results;
   },
 
   historialLogros: async ({ usuarioIdentifier }) => {
+    // Salón de la Fama: Solo objetivos cumplidos exitosamente
     const usuarios = await query(`SELECT Id_usuario FROM usuarios WHERE Identifier_usuario = ?`, [usuarioIdentifier]);
     if (!usuarios.length) return [];
     const userId = usuarios[0].Id_usuario;
 
     const rows = await query(`
-      SELECT m.Id_relacion_usuario_objetivo, m.Objetivo as Id_objetivo, o.Titulo_objetivo, m.Fecha_completado, m.Puntos_otorgados, m.Status, m.Final_value
+      SELECT m.Id_relacion_usuario_objetivo, m.Objetivo as Id_objetivo, o.Titulo_objetivo, o.Valor_objetivo, o.Categoria_objetivo, c.Nombre_categoria, m.Fecha_completado, m.Puntos_otorgados, m.Status, m.Final_value
       FROM usuarios_y_objetivos m
       JOIN objetivos o ON o.Id_objetivo = m.Objetivo
-      WHERE m.Usuario = ? AND m.Status IN ('Cumplido', 'Fallido')
+      LEFT JOIN categorias c ON c.Id_categoria = o.Categoria_objetivo
+      WHERE m.Usuario = ? AND m.Status = 'Cumplido'
       ORDER BY m.Fecha_completado DESC
     `, [userId]);
 
@@ -202,56 +255,10 @@ const root = {
       puntos: r.Puntos_otorgados || 0,
       status: r.Status,
       finalValue: r.Final_value == null ? null : r.Final_value,
+      valorObjetivo: r.Valor_objetivo,
+      categoriaId: r.Categoria_objetivo || null,
+      nombreCategoria: r.Nombre_categoria || null,
     }));
-  },
-
-  generarObjetivosPorDefecto: async ({ usuarioIdentifier }) => {
-    try {
-      console.log(`🎯 GraphQL: Generando objetivos por defecto para ${usuarioIdentifier}`);
-      
-      // Obtener dinero disponible
-      const dineroDisponible = await obtenerDineroDisponible(usuarioIdentifier);
-      
-      if (dineroDisponible <= 0) {
-        return {
-          success: false,
-          message: 'No se puede generar objetivos sin dinero disponible. Registra ingresos primero.',
-          objetivos: [],
-          dineroDisponible: 0
-        };
-      }
-
-      // Generar objetivos
-      const resultado = await generarObjetivosPorDefecto(usuarioIdentifier, dineroDisponible);
-      
-      return resultado;
-    } catch (error) {
-      console.error('❌ Error en GraphQL generarObjetivosPorDefecto:', error);
-      return {
-        success: false,
-        message: `Error generando objetivos: ${error.message}`,
-        objetivos: [],
-        dineroDisponible: 0
-      };
-    }
-  },
-
-  verificarObjetivosCompletados: async ({ usuarioIdentifier }) => {
-    try {
-      console.log(`🔍 GraphQL: Verificando objetivos completados para ${usuarioIdentifier}`);
-      
-      const resultado = await verificarObjetivosCompletados(usuarioIdentifier);
-      
-      return resultado;
-    } catch (error) {
-      console.error('❌ Error en GraphQL verificarObjetivosCompletados:', error);
-      return {
-        verificados: 0,
-        completados: 0,
-        fallidos: 0,
-        actualizados: []
-      };
-    }
   },
 
   // Queries para objetivos personalizados
@@ -305,8 +312,73 @@ const root = {
     }
   },
 
+  // Nueva query para obtener estadísticas del usuario incluyendo racha_actual
+  estadisticasUsuario: async ({ usuarioIdentifier }) => {
+    try {
+      const usuarios = await query(`SELECT Id_usuario, Points_total, racha_actual FROM usuarios WHERE Identifier_usuario = ?`, [usuarioIdentifier]);
+      if (!usuarios.length) return null;
+      
+      const usuario = usuarios[0];
+      
+      // Obtener objetivos en progreso
+      const objetivosEnProgreso = await query(`
+        SELECT COUNT(*) as count
+        FROM usuarios_y_objetivos 
+        WHERE Usuario = ? AND Status = 'En progreso'
+      `, [usuario.Id_usuario]);
+      
+      // Obtener objetivos completados
+      const objetivosCompletados = await query(`
+        SELECT COUNT(*) as count
+        FROM usuarios_y_objetivos 
+        WHERE Usuario = ? AND Status = 'Cumplido'
+      `, [usuario.Id_usuario]);
+      
+      return {
+        puntosTotal: usuario.Points_total || 0,
+        rachaActual: usuario.racha_actual || 0,
+        objetivosEnProgreso: objetivosEnProgreso[0].count || 0,
+        objetivosCompletados: objetivosCompletados[0].count || 0
+      };
+    } catch (error) {
+      console.error('Error obteniendo estadísticas del usuario:', error);
+      return null;
+    }
+  },
+
   // Mutations para objetivos personalizados
-  crearObjetivoPersonalizado: async ({ usuarioIdentifier, titulo, valorObjetivo, tipoObjetivo, categoriaObjetivo, multiplicador, descripcion }) => {
+  generarObjetivosPorDefecto: async ({ usuarioIdentifier }) => {
+    try {
+      console.log(`🎯 GraphQL: Generando objetivos por defecto para ${usuarioIdentifier}`);
+      
+      // Obtener dinero disponible
+      const dineroDisponible = await obtenerDineroDisponible(usuarioIdentifier);
+      
+      if (dineroDisponible <= 0) {
+        return {
+          success: false,
+          message: 'No se puede generar objetivos sin dinero disponible. Registra ingresos primero.',
+          objetivos: [],
+          dineroDisponible: 0
+        };
+      }
+
+      // Generar objetivos
+      const resultado = await generarObjetivosPorDefecto(usuarioIdentifier, dineroDisponible);
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ Error en GraphQL generarObjetivosPorDefecto:', error);
+      return {
+        success: false,
+        message: `Error generando objetivos: ${error.message}`,
+        objetivos: [],
+        dineroDisponible: 0
+      };
+    }
+  },
+
+  crearObjetivoPersonalizado: async ({ usuarioIdentifier, titulo, valorObjetivo, tipoObjetivo, categoriaObjetivo, descripcion }) => {
     try {
       console.log(`🎯 GraphQL: Creando objetivo personalizado para ${usuarioIdentifier}`);
       
@@ -315,7 +387,6 @@ const root = {
         valorObjetivo,
         tipoObjetivo,
         categoriaObjetivo,
-        multiplicador,
         descripcion
       });
       

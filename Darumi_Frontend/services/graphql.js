@@ -35,6 +35,38 @@ export const graphqlQuery = async (query, variables = {}) => {
   }
 };
 
+// GraphQL mutation helper
+export const graphqlMutation = async (mutation, variables = {}) => {
+  try {
+    console.log('🔧 GraphQL Mutation:', mutation);
+    console.log('📝 Variables:', variables);
+    
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: mutation,
+        variables,
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.errors) {
+      console.error('❌ GraphQL Mutation Errors:', result.errors);
+      throw new Error(result.errors[0].message);
+    }
+
+    console.log('✅ GraphQL Mutation Response:', result.data);
+    return result.data;
+  } catch (error) {
+    console.error('❌ GraphQL Mutation Request Error:', error);
+    throw error;
+  }
+};
+
 // GraphQL queries for objectives
 export const OBJECTIVES_QUERIES = {
   // Get current month progress for objectives
@@ -62,45 +94,7 @@ export const OBJECTIVES_QUERIES = {
         puntos
         status
         finalValue
-      }
-    }
-  `,
-
-  // Generate default objectives
-  GENERATE_DEFAULT_OBJECTIVES: `
-    query GenerarObjetivosPorDefecto($usuarioIdentifier: String!) {
-      generarObjetivosPorDefecto(usuarioIdentifier: $usuarioIdentifier) {
-        success
-        message
-        dineroDisponible
-        objetivos {
-          id
-          titulo
-          descripcion
-          valorObjetivo
-          multiplicador
-          nivel
-        }
-      }
-    }
-  `,
-
-  // Check completed objectives
-  CHECK_COMPLETED_OBJECTIVES: `
-    query VerificarObjetivosCompletados($usuarioIdentifier: String!) {
-      verificarObjetivosCompletados(usuarioIdentifier: $usuarioIdentifier) {
-        verificados
-        completados
-        fallidos
-        actualizados {
-          id
-          titulo
-          status
-          puntos
-          gastoFinal
-          valorObjetivo
-          cumplido
-        }
+        valorObjetivo
       }
     }
   `,
@@ -146,6 +140,40 @@ export const OBJECTIVES_QUERIES = {
     }
   `,
 
+  // Get user statistics including streak
+  GET_USER_STATS: `
+    query EstadisticasUsuario($usuarioIdentifier: String!) {
+      estadisticasUsuario(usuarioIdentifier: $usuarioIdentifier) {
+        puntosTotal
+        rachaActual
+        objetivosEnProgreso
+        objetivosCompletados
+      }
+    }
+  `,
+};
+
+// GraphQL mutations for objectives
+export const OBJECTIVES_MUTATIONS = {
+  // Generate default objectives (moved from Query to Mutation)
+  GENERATE_DEFAULT_OBJECTIVES: `
+    mutation GenerarObjetivosPorDefecto($usuarioIdentifier: String!) {
+      generarObjetivosPorDefecto(usuarioIdentifier: $usuarioIdentifier) {
+        success
+        message
+        dineroDisponible
+        objetivos {
+          id
+          titulo
+          descripcion
+          valorObjetivo
+          multiplicador
+          nivel
+        }
+      }
+    }
+  `,
+
   // Create custom objective
   CREATE_CUSTOM_OBJECTIVE: `
     mutation CrearObjetivoPersonalizado(
@@ -154,7 +182,6 @@ export const OBJECTIVES_QUERIES = {
       $valorObjetivo: Float!
       $tipoObjetivo: Int!
       $categoriaObjetivo: Int
-      $multiplicador: Float
       $descripcion: String
     ) {
       crearObjetivoPersonalizado(
@@ -163,7 +190,6 @@ export const OBJECTIVES_QUERIES = {
         valorObjetivo: $valorObjetivo
         tipoObjetivo: $tipoObjetivo
         categoriaObjetivo: $categoriaObjetivo
-        multiplicador: $multiplicador
         descripcion: $descripcion
       ) {
         success
@@ -172,7 +198,6 @@ export const OBJECTIVES_QUERIES = {
           id
           titulo
           valorObjetivo
-          multiplicador
           tipoObjetivo
           categoriaObjetivo
           fechaCreacion
@@ -228,29 +253,16 @@ export const objectivesService = {
     }
   },
 
-  // Generate default objectives
+  // Generate default objectives (now a mutation)
   generateDefaultObjectives: async (usuarioIdentifier) => {
     try {
-      const data = await graphqlQuery(OBJECTIVES_QUERIES.GENERATE_DEFAULT_OBJECTIVES, {
+      const data = await graphqlMutation(OBJECTIVES_MUTATIONS.GENERATE_DEFAULT_OBJECTIVES, {
         usuarioIdentifier,
       });
       return data.generarObjetivosPorDefecto || { success: false, message: 'Error desconocido' };
     } catch (error) {
       console.error('Error generating default objectives:', error);
       return { success: false, message: error.message };
-    }
-  },
-
-  // Check completed objectives
-  checkCompletedObjectives: async (usuarioIdentifier) => {
-    try {
-      const data = await graphqlQuery(OBJECTIVES_QUERIES.CHECK_COMPLETED_OBJECTIVES, {
-        usuarioIdentifier,
-      });
-      return data.verificarObjetivosCompletados || { verificados: 0, completados: 0, fallidos: 0, actualizados: [] };
-    } catch (error) {
-      console.error('Error checking completed objectives:', error);
-      return { verificados: 0, completados: 0, fallidos: 0, actualizados: [] };
     }
   },
 
@@ -289,10 +301,23 @@ export const objectivesService = {
     }
   },
 
-  // Create custom objective
+  // Get user statistics including streak
+  getUserStats: async (usuarioIdentifier) => {
+    try {
+      const data = await graphqlQuery(OBJECTIVES_QUERIES.GET_USER_STATS, {
+        usuarioIdentifier,
+      });
+      return data.estadisticasUsuario || null;
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      return null;
+    }
+  },
+
+  // Create custom objective (now uses mutation)
   createCustomObjective: async (usuarioIdentifier, objectiveData) => {
     try {
-      const data = await graphqlQuery(OBJECTIVES_QUERIES.CREATE_CUSTOM_OBJECTIVE, {
+      const data = await graphqlMutation(OBJECTIVES_MUTATIONS.CREATE_CUSTOM_OBJECTIVE, {
         usuarioIdentifier,
         ...objectiveData,
       });
@@ -303,10 +328,10 @@ export const objectivesService = {
     }
   },
 
-  // Delete custom objective
+  // Delete custom objective (now uses mutation)
   deleteCustomObjective: async (usuarioIdentifier, objetivoId) => {
     try {
-      const data = await graphqlQuery(OBJECTIVES_QUERIES.DELETE_CUSTOM_OBJECTIVE, {
+      const data = await graphqlMutation(OBJECTIVES_MUTATIONS.DELETE_CUSTOM_OBJECTIVE, {
         usuarioIdentifier,
         objetivoId,
       });

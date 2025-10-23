@@ -98,13 +98,12 @@ async function generarObjetivosPorDefecto(userIdentifier, dineroDisponible) {
       for (const objetivo of objetivosPorDefecto) {
         // Crear el objetivo
         const objetivoResult = await query(
-          `INSERT INTO objetivos (Titulo_objetivo, Fecha_creacion_objetivo, Multiplicador, Tipo_objetivo, Estado_objetivo, Valor_objetivo, Categoria_objetivo) 
-           VALUES (?, NOW(), ?, ?, ?, ?, ?)`,
+          `INSERT INTO objetivos (Titulo_objetivo, Fecha_creacion_objetivo, Multiplicador, Tipo_objetivo, Valor_objetivo, Categoria_objetivo) 
+           VALUES (?, NOW(), ?, ?, ?, ?)`,
           [
             objetivo.titulo,
             objetivo.multiplicador,
             objetivo.tipoObjetivo,
-            estadoId,
             objetivo.valorObjetivo,
             objetivo.categoriaObjetivo
           ]

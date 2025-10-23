@@ -27,7 +27,7 @@ const connection = require('./db');
 const usuarios = require('./methods/methodUsuarios');
 const categorias = require('./methods/methodCategorias');
 const estados = require('./methods/methodEstados');
-const gastos = require('./methods/methodGastos');
+const { gastos, setSocketIO: setSocketIOGastos } = require('./methods/methodGastos');
 const pagosHabituales = require('./methods/methodPagosHabituales');
 const objetivos = require('./methods/methodObjetivos');
 const tipos = require('./methods/methodTiposObjetivos');
@@ -77,8 +77,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// Set Socket.IO instance for scheduler
+// Set Socket.IO instance for scheduler and gastos
 setSocketIO(io);
+setSocketIOGastos(io);
 
 // Redirect to /hola
 app.get('/', (req, res) => {

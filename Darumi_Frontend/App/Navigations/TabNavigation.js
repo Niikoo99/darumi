@@ -124,7 +124,7 @@ export default function TabNavigation() {
         name='Achievement' 
         component={Achievement}
         options={{ 
-          title: "Logros",
+          title: "Metas",
           tabBarIcon: ({ color, focused }) => (
             <View style={[
               styles.iconContainer,

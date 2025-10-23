@@ -107,6 +107,12 @@ export default function Home() {
   const [topIncomes, setTopIncomes] = useState(null);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
+  // Estados específicos para el balance
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [balanceLoaded, setBalanceLoaded] = useState(false);
+  const [balanceCache, setBalanceCache] = useState(null);
+  const [lastBalanceUpdate, setLastBalanceUpdate] = useState(null);
+  
   // Estados para animaciones
   const [modalAnimation] = useState(new Animated.Value(0));
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -173,104 +179,24 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (isSignedIn) {
-        setLoading(true);
-        try {
-          console.log('🚀 Iniciando fetch de datos...');
-          console.log('👤 Usuario:', user.id);
-          
-          // Fetch categories
-          const categoriesUrl = buildApiUrl(getEndpoints().CATEGORIES + '/');
-          console.log('📂 Fetching categories from:', categoriesUrl);
-          const categoriesResponse = await axios.get(categoriesUrl);
-          console.log('✅ Categories response:', categoriesResponse.data);
-          setData(categoriesResponse.data);
-
-          // Find the category with Nombre_categoria "Ingresos" and store its Id_categoria
-          const ingresosCategory = categoriesResponse.data.find(category => category.Nombre_categoria === 'Ingresos');
-          if (ingresosCategory) {
-            setCategoriaIngresos(ingresosCategory.Id_categoria);
-          }
-
-          // Fetch transactions
-          const transactionsResponse = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { 
-            params: { Id_Usuario: user.id } 
-          });
-          setTransactions(transactionsResponse.data);
-
-          // Calculate financial data
-          const currentMonth = new Date().getMonth() + 1;
-          const currentYear = new Date().getFullYear();
-          
-          const monthlyTransactions = transactionsResponse.data.filter(transaction => {
-            const transactionDate = new Date(transaction.Fecha_creacion_gasto);
-            return transactionDate.getMonth() + 1 === currentMonth && 
-                   transactionDate.getFullYear() === currentYear;
-          });
-
-          const totalExpenses = monthlyTransactions
-            .filter(t => t.Monto_gasto < 0)
-            .reduce((sum, t) => sum + Math.abs(t.Monto_gasto), 0);
-          
-          const totalIncome = monthlyTransactions
-            .filter(t => t.Monto_gasto > 0)
-            .reduce((sum, t) => sum + t.Monto_gasto, 0);
-
-          // Calcular balance incluyendo pagos habituales
-          let balance = totalIncome - totalExpenses;
-          
-          // Si hay resumen de pagos habituales, incluirlo en el cálculo
-          if (resumen) {
-            balance += resumen.balance || 0;
-          }
-
-          setFinancialData({
-            totalExpenses,
-            totalIncome,
-            balance,
-            availableMoney: totalIncome, // Dinero disponible basado en los ingresos totales
-          });
-
-          // Calculate category data
-          const categoryTotals = {};
-          monthlyTransactions.forEach(transaction => {
-            const categoryName = transaction.Nombre_categoria;
-            if (!categoryTotals[categoryName]) {
-              categoryTotals[categoryName] = 0;
-            }
-            categoryTotals[categoryName] += Math.abs(transaction.Monto_gasto);
-          });
-
-          const categoryArray = Object.entries(categoryTotals)
-            .map(([name, total]) => ({ name, total }))
-            .sort((a, b) => b.total - a.total);
-
-          setCategoryData(categoryArray);
-
-        } catch (error) {
-          console.error('❌ Error fetching data:', error);
-          console.error('❌ Error details:', {
-            message: error.message,
-            code: error.code,
-            response: error.response?.data,
-            status: error.response?.status,
-            url: error.config?.url
-          });
-          setError(error);
-          setDebugInfo(`❌ Error: ${error.message}`);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Fetch data directamente
-    fetchData();
-    
-    // Fetch category reports usando los nuevos endpoints
-    fetchCategoryReports();
+    if (isSignedIn) {
+      // Cargar balance primero con prioridad alta
+      fetchBalanceData();
+      
+      // Luego cargar el resto de datos en paralelo
+      Promise.all([
+        fetchData(),
+        fetchCategoryReports()
+      ]).catch(error => {
+        console.error('Error cargando datos adicionales:', error);
+      });
+    }
   }, [isSignedIn, user]);
+
+  // Función para refrescar el balance cuando se agrega una nueva transacción
+  const refreshBalance = async () => {
+    await fetchBalanceData(true); // Forzar refresh
+  };
 
   const handleGuardar = async () => {
     // Validación del formulario
@@ -326,13 +252,89 @@ export default function Home() {
       setModalVisible(false);
       
       // Refresh data after saving
-      await fetchData();
-      await fetchCategoryReports();
+      await Promise.all([
+        refreshBalance(), // Refrescar balance primero
+        fetchData(),
+        fetchCategoryReports()
+      ]);
     } catch (error) {
       console.error('Error al guardar:', error);
       setFormErrors({ general: 'Error al guardar la transacción. Inténtalo de nuevo.' });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Función específica para cargar el balance con prioridad alta
+  const fetchBalanceData = async (forceRefresh = false) => {
+    if (isSignedIn) {
+      // Verificar caché (válido por 30 segundos)
+      const now = Date.now();
+      const cacheValid = lastBalanceUpdate && (now - lastBalanceUpdate) < 30000;
+      
+      if (!forceRefresh && balanceCache && cacheValid) {
+        console.log('📦 Usando balance desde caché');
+        setFinancialData(balanceCache);
+        setBalanceLoaded(true);
+        return;
+      }
+
+      setIsLoadingBalance(true);
+      try {
+        console.log('🚀 Cargando balance del mes...');
+        
+        // Fetch transactions primero para calcular el balance
+        const transactionsResponse = await axios.get(buildApiUrl(getEndpoints().GASTOS + '/'), { 
+          params: { Id_Usuario: user.id } 
+        });
+        
+        // Calculate financial data inmediatamente
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        
+        const monthlyTransactions = transactionsResponse.data.filter(transaction => {
+          const transactionDate = new Date(transaction.Fecha_creacion_gasto);
+          return transactionDate.getMonth() + 1 === currentMonth && 
+                 transactionDate.getFullYear() === currentYear;
+        });
+
+        const totalExpenses = monthlyTransactions
+          .filter(t => t.Monto_gasto < 0)
+          .reduce((sum, t) => sum + Math.abs(t.Monto_gasto), 0);
+        
+        const totalIncome = monthlyTransactions
+          .filter(t => t.Monto_gasto > 0)
+          .reduce((sum, t) => sum + t.Monto_gasto, 0);
+
+        // Calcular balance incluyendo pagos habituales
+        let balance = totalIncome - totalExpenses;
+        
+        // Si hay resumen de pagos habituales, incluirlo en el cálculo
+        if (resumen) {
+          balance += resumen.balance || 0;
+        }
+
+        const financialData = {
+          totalExpenses,
+          totalIncome,
+          balance,
+          availableMoney: totalIncome, // Dinero disponible basado en los ingresos totales
+        };
+
+        setFinancialData(financialData);
+        
+        // Guardar en caché
+        setBalanceCache(financialData);
+        setLastBalanceUpdate(now);
+        setBalanceLoaded(true);
+        console.log('✅ Balance del mes cargado:', { totalExpenses, totalIncome, balance });
+        
+      } catch (error) {
+        console.error('❌ Error cargando balance:', error);
+        setError(error);
+      } finally {
+        setIsLoadingBalance(false);
+      }
     }
   };
 
@@ -357,7 +359,7 @@ export default function Home() {
         });
         setTransactions(transactionsResponse.data);
 
-        // Calculate financial data
+        // Calculate category data
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
         
@@ -367,24 +369,6 @@ export default function Home() {
                  transactionDate.getFullYear() === currentYear;
         });
 
-        const totalExpenses = monthlyTransactions
-          .filter(t => t.Monto_gasto < 0)
-          .reduce((sum, t) => sum + Math.abs(t.Monto_gasto), 0);
-        
-        const totalIncome = monthlyTransactions
-          .filter(t => t.Monto_gasto > 0)
-          .reduce((sum, t) => sum + t.Monto_gasto, 0);
-
-        const balance = totalIncome - totalExpenses;
-
-        setFinancialData({
-          totalExpenses,
-          totalIncome,
-          balance,
-          availableMoney: totalIncome, // Dinero disponible basado en los ingresos totales
-        });
-
-        // Calculate category data
         const categoryTotals = {};
         monthlyTransactions.forEach(transaction => {
           const categoryName = transaction.Nombre_categoria;
@@ -570,6 +554,7 @@ export default function Home() {
             balance={financialData.balance}
             availableMoney={financialData.availableMoney}
             spentMoney={financialData.totalExpenses}
+            isLoading={isLoadingBalance}
           />
         </Animated.View>
 

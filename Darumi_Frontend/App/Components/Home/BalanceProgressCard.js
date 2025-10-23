@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Colors from '../../../assets/shared/Colors';
 import { formatCurrency } from '../../../utils/formatting';
@@ -18,7 +18,8 @@ const BalanceProgressCard = ({
   balance, 
   availableMoney, 
   spentMoney, 
-  currency = '$' 
+  currency = '$',
+  isLoading = false
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   
@@ -37,6 +38,20 @@ const BalanceProgressCard = ({
     if (percentage <= 80) return Colors.warning;
     return Colors.danger;
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Balance del Mes</Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={Colors.primary} />
+            <Text style={styles.loadingText}>Cargando...</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -123,6 +138,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: getSpacing(12),
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getSpacing(8),
+  },
+  loadingText: {
+    fontSize: getBodyFontSize(),
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
   eyeButton: {
     padding: getSpacing(8),

@@ -146,9 +146,11 @@ async function crearObjetivoPersonalizado(userIdentifier, objetivoData) {
       valorObjetivo,
       tipoObjetivo,
       categoriaObjetivo,
-      multiplicador = 1,
       descripcion = ''
     } = objetivoData;
+    
+    // Asignar multiplicador por defecto controlado por el sistema
+    const multiplicador = 1.0;
     
     const fechaActual = new Date();
     const estadoEnProgreso = 1; // Estado "En progreso"
@@ -164,16 +166,14 @@ async function crearObjetivoPersonalizado(userIdentifier, objetivoData) {
           Fecha_creacion_objetivo, 
           Multiplicador, 
           Tipo_objetivo, 
-          Estado_objetivo, 
           Valor_objetivo, 
           Categoria_objetivo
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           titulo.trim(),
           fechaActual,
           multiplicador,
           tipoObjetivo,
-          estadoEnProgreso,
           valorObjetivo,
           tipoObjetivo === 2 ? categoriaObjetivo : null
         ]

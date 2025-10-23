@@ -50,17 +50,16 @@ objetivos.post('/objetivos', (req, res) => {
   const titulo = req.query["Titulo_objetivo"];
   const fecha = req.query["Fecha_creacion_objetivo"];
   const tipo = req.query["Tipo_objetivo"];
-  const estado = req.query["Estado_objetivo"];
 
   // Realiza la inserción en la base de datos
-  connection.query('INSERT INTO objetivos (Id_objetivo, Titulo_objetivo, Fecha_creacion_objetivo, Tipo_objetivo, Estado_objetivo) VALUES (?, ?, ?, ?, ?)', [id, titulo, fecha, tipo, estado], (error, results) => {
+  connection.query('INSERT INTO objetivos (Id_objetivo, Titulo_objetivo, Fecha_creacion_objetivo, Tipo_objetivo) VALUES (?, ?, ?, ?)', [id, titulo, fecha, tipo], (error, results) => {
     if (error) {
       console.error('Error al ejecutar la consulta MySQL', error);
       res.status(500).json({ error: 'Error de servidor' });
     } else {
       // Devuelve el ID del usuario recién creado
       //res.json({ id: results.insertId, apellido, nombre, email });
-      res.json({ id, titulo, fecha, tipo, estado });
+      res.json({ id, titulo, fecha, tipo });
     }
   });
 });
