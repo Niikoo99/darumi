@@ -75,34 +75,44 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
   // Load data on mount
   useEffect(() => {
     if (visible) {
+      // Inicializar animaciones inmediatamente
+      fadeAnim.setValue(0);
+      slideAnim.setValue(100);
+      scaleAnim.setValue(0.9);
+      stepAnim.setValue(1);
+      
+      // Cargar datos y animar entrada del modal
       loadFormData();
-      // Animar entrada del modal
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      
+      // Pequeño delay para asegurar que el modal esté montado
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            tension: 50,
+            friction: 7,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, 50);
     } else {
       // Reset wizard state
       setCurrentStep(1);
-    setTitulo('');
-    setValorObjetivo('');
-    setTipoObjetivo(1);
-    setCategoriaObjetivo(null);
-    setDescripcion('');
+      setTitulo('');
+      setValorObjetivo('');
+      setTipoObjetivo(1);
+      setCategoriaObjetivo(null);
+      setDescripcion('');
       
       // Animar salida del modal
       Animated.parallel([
@@ -138,22 +148,23 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
     try {
       setLoading(true);
       
-      const [categoriesData, typesData] = await Promise.all([
-        objectivesService.getCategories(),
-        objectivesService.getObjectiveTypes()
-      ]);
-      
-      setCategories(categoriesData);
-      
-      // Fallback data para tipos de objetivos si la API no devuelve datos
+      // Asegurar que los tipos de objetivos estén disponibles inmediatamente
       const fallbackTypes = [
         { id: 1, nombre: 'Gastos generales' },
         { id: 2, nombre: 'Gastos por categoria' }
       ];
       
+      setObjectiveTypes(fallbackTypes);
+      
+      const [categoriesData, typesData] = await Promise.all([
+        objectivesService.getCategories(),
+        objectivesService.getObjectiveTypes()
+      ]);
+      
+      setCategories(categoriesData || []);
+      
       // Usar datos de la API si están disponibles, sino usar fallback
       const finalTypes = typesData && typesData.length > 0 ? typesData : fallbackTypes;
-      
       setObjectiveTypes(finalTypes);
       
     } catch (error) {
@@ -343,7 +354,7 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
             </View>
             {tipoObjetivo === type.id && (
               <View style={styles.optionCheck}>
-                <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.white} />
+                <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.textDark} />
               </View>
             )}
           </TouchableOpacity>
@@ -475,15 +486,17 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
             alwaysBounceVertical={false}
             nestedScrollEnabled={true}
           >
-            {loading && (
+            {loading && objectiveTypes.length === 0 ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={Colors.primary} />
                 <Text style={styles.loadingText}>Cargando datos...</Text>
               </View>
+            ) : (
+              <>
+                {currentStep === 1 && renderStep1()}
+                {currentStep === 2 && renderStep2()}
+              </>
             )}
-
-            {!loading && currentStep === 1 && renderStep1()}
-            {!loading && currentStep === 2 && renderStep2()}
           </ScrollView>
 
           {/* Action Buttons */}
@@ -504,7 +517,7 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
                   disabled={loading || !validateStep1()}
                 >
                   <Text style={styles.nextButtonText}>Siguiente</Text>
-                  <FontAwesome5 name="arrow-right" size={getIconSize(16)} color={Colors.white} />
+                  <FontAwesome5 name="arrow-right" size={getIconSize(16)} color={Colors.text} />
                 </TouchableOpacity>
               </>
             ) : (
@@ -531,7 +544,7 @@ const CustomObjectiveForm = ({ visible, onClose, onSuccess, userIdentifier }) =>
                   ) : (
                     <>
                       <Text style={styles.submitButtonText}>Crear Objetivo</Text>
-                      <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.white} />
+                      <FontAwesome5 name="check" size={getIconSize(16)} color={Colors.text} />
                     </>
                   )}
                 </TouchableOpacity>
@@ -563,24 +576,26 @@ const styles = {
     borderColor: Colors.border,
   },
   header: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.backgroundCard,
     paddingTop: getSpacing(4),
     paddingBottom: getSpacing(8),
     paddingHorizontal: getHorizontalPadding(),
     borderTopLeftRadius: getBorderRadius(20),
     borderTopRightRadius: getBorderRadius(20),
     alignItems: 'center',
+    borderBottomWidth: getBorderWidth(1),
+    borderBottomColor: Colors.border,
   },
   title: {
     fontSize: getTitleFontSize(22),
     fontWeight: '700',
-    color: Colors.textDark,
+    color: Colors.text,
     marginBottom: getSpacing(4),
     textAlign: 'center',
   },
   subtitle: {
     fontSize: getBodyFontSize(13),
-    color: 'rgba(26, 26, 26, 0.8)',
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: getSpacing(8),
   },
@@ -593,19 +608,19 @@ const styles = {
     width: scaleSize(12),
     height: scaleSize(12),
     borderRadius: scaleSize(6),
-    backgroundColor: 'rgba(26, 26, 26, 0.3)',
+    backgroundColor: Colors.borderLight,
   },
   stepDotActive: {
-    backgroundColor: Colors.textDark,
+    backgroundColor: Colors.primary,
   },
   stepLine: {
     width: scaleSize(40),
     height: scaleSize(2),
-    backgroundColor: 'rgba(26, 26, 26, 0.3)',
+    backgroundColor: Colors.borderLight,
     marginHorizontal: getSpacing(8),
   },
   stepLineActive: {
-    backgroundColor: Colors.textDark,
+    backgroundColor: Colors.primary,
   },
   scrollContainer: {
     flex: 1,
@@ -658,16 +673,17 @@ const styles = {
     borderRadius: getBorderRadius(10),
     padding: getSpacing(12),
     borderWidth: getBorderWidth(1),
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.borderLight,
     ...getShadowSize(1, 2, 0.1),
   },
   optionCardSelected: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.active,
     borderColor: Colors.primary,
+    borderWidth: getBorderWidth(2),
   },
   optionIcon: {
     ...getIconContainerSize(40),
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.borderLight,
     borderRadius: getBorderRadius(20),
     justifyContent: 'center',
     alignItems: 'center',
@@ -683,7 +699,7 @@ const styles = {
     marginBottom: getSpacing(4),
   },
   optionTitleSelected: {
-    color: Colors.white,
+    color: Colors.text,
   },
   optionDescription: {
     fontSize: getSmallFontSize(13),
@@ -691,11 +707,11 @@ const styles = {
     lineHeight: getSpacing(18),
   },
   optionDescriptionSelected: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: Colors.textSecondary,
   },
   optionCheck: {
     ...getIconContainerSize(24),
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: Colors.primary,
     borderRadius: getBorderRadius(12),
     justifyContent: 'center',
     alignItems: 'center',
@@ -795,19 +811,21 @@ const styles = {
   },
   nextButton: {
     flex: 2,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.active,
     borderRadius: getBorderRadius(12),
     paddingVertical: getSpacing(12),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: getGap(6),
+    borderWidth: getBorderWidth(1),
+    borderColor: Colors.primary,
     ...getShadowSize(0, 2, 0.2),
   },
   nextButtonText: {
     fontSize: getBodyFontSize(16),
     fontWeight: '600',
-    color: Colors.white,
+    color: Colors.text,
   },
   backButton: {
     flex: 1,
@@ -828,19 +846,21 @@ const styles = {
   },
   submitButton: {
     flex: 2,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.active,
     borderRadius: getBorderRadius(12),
     paddingVertical: getSpacing(12),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: getGap(6),
+    borderWidth: getBorderWidth(1),
+    borderColor: Colors.primary,
     ...getShadowSize(0, 2, 0.2),
   },
   submitButtonText: {
     fontSize: getBodyFontSize(16),
     fontWeight: '600',
-    color: Colors.white,
+    color: Colors.text,
   },
   disabledButton: {
     backgroundColor: Colors.textSecondary,
