@@ -695,7 +695,7 @@ export default function Home() {
       >
         {/* Campo de título */}
         <ModernInputField
-          label="¿En qué gastaste?"
+          label={isExpensesSelected ? "¿En qué gastaste?" : "¿De dónde proviene el ingreso?"}
           placeholder={isExpensesSelected ? "Ej: Supermercado, Uber, Gasolina..." : "Ej: Salario, Venta, Freelance..."}
           value={valor_Titulo}
           onChangeText={setValorTitulo}

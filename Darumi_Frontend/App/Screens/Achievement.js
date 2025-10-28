@@ -597,7 +597,7 @@ export default function Achievement() {
     <View style={styles.container}>
       {/* Header Gamificado */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🎯 Mis Metas</Text>
+        <Text style={styles.headerTitle}>🎯 Mis Objetivos</Text>
         <Text style={styles.headerSubtitle}>Tu progreso financiero gamificado</Text>
       </View>
 
